@@ -563,9 +563,9 @@ h1 {
 }
 
 .rematch-actions {
-  align-self: center;
-  margin-top: 6px;
+  margin-top: 10px;
   display: flex;
+  justify-content: center;
   align-items: center;
   gap: 8px;
   padding: 7px 10px;
@@ -912,6 +912,15 @@ body.focus-mode #gameCanvas {
 body.focus-mode .item-guide,
 body.focus-mode .hint--under {
   display: none;
+}
+
+body.focus-mode .rematch-actions {
+  position: fixed;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  margin-top: 0;
+  z-index: 36;
 }
 
 @media (max-width: 980px) {
