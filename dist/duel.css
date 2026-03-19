@@ -1,0 +1,878 @@
+:root {
+  --bg-1: #071117;
+  --bg-2: #1f2f34;
+  --ink: #edf7f5;
+  --line: rgba(146, 209, 193, 0.34);
+  --panel: rgba(8, 21, 27, 0.88);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: 'Noto Sans JP', sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 14% 10%, rgba(0, 199, 178, 0.2), transparent 36%),
+    radial-gradient(circle at 86% 16%, rgba(255, 151, 62, 0.24), transparent 36%),
+    linear-gradient(135deg, var(--bg-1), var(--bg-2));
+}
+
+.layout {
+  width: min(1720px, 100vw);
+  margin: 0 auto;
+  padding: 8px;
+  display: grid;
+  gap: 10px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.online-panel {
+  padding: 10px;
+}
+
+.mode-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mode-btn {
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.84rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.mode-btn.is-active {
+  border-color: rgba(255, 255, 255, 0.88);
+  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.12);
+}
+
+.online-controls {
+  margin-top: 8px;
+}
+
+.online-controls.is-hidden {
+  display: none;
+}
+
+.online-grid {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 96px auto minmax(120px, 1fr) auto auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+}
+
+.field span {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+}
+
+.field input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--ink);
+  padding: 8px 10px;
+  font-size: 0.92rem;
+}
+
+.field select {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--ink);
+  padding: 8px 10px;
+  font-size: 0.92rem;
+}
+
+.mini-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 9px 11px;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.84rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  background: linear-gradient(90deg, #00c7b2, #3be8bd);
+  color: #06261f;
+}
+
+.mini-btn--ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.mode-status,
+.campaign-info {
+  margin: 8px 0 0;
+  font-size: 0.84rem;
+  opacity: 0.92;
+}
+
+.setup-panel {
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.duo-block {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.choice-block.is-hidden {
+  display: none;
+}
+
+.choice-block h2 {
+  margin: 0 0 6px;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+}
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.choice-grid--stage {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.choice-card {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.23);
+  color: var(--ink);
+  text-align: left;
+  padding: 8px;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.choice-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.choice-card.is-selected {
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4), inset 0 0 24px rgba(255, 255, 255, 0.08);
+}
+
+.choice-card:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.stage-card {
+  min-height: 108px;
+}
+
+.stage-name {
+  margin: 0;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.95rem;
+}
+
+.stage-mini {
+  margin: 6px 0;
+  width: 100%;
+  height: 44px;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stage-mini::before {
+  content: '';
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  left: calc(50% - 17px);
+  top: calc(50% - 17px);
+}
+
+.stage-mini--neon {
+  background: linear-gradient(130deg, #112a31, #0d1820);
+}
+
+.stage-mini--glacier {
+  background: linear-gradient(130deg, #102238, #0c172b);
+}
+
+.stage-mini--magma {
+  background: linear-gradient(130deg, #2d1611, #160b09);
+}
+
+.stage-desc {
+  margin: 0;
+  font-size: 0.74rem;
+  opacity: 0.9;
+}
+
+.char-card {
+  min-height: 148px;
+}
+
+.char-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.char-token {
+  width: 36px;
+  height: 36px;
+  background: var(--main);
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25) inset;
+}
+
+.shape-blaze {
+  clip-path: polygon(50% 0%, 62% 32%, 96% 35%, 70% 57%, 78% 96%, 50% 72%, 22% 96%, 30% 57%, 4% 35%, 38% 32%);
+}
+
+.shape-fort {
+  clip-path: polygon(25% 5%, 75% 5%, 97% 50%, 75% 95%, 25% 95%, 3% 50%);
+}
+
+.shape-swift {
+  clip-path: polygon(50% 4%, 96% 90%, 4% 90%);
+}
+
+.shape-crusher {
+  clip-path: polygon(50% 2%, 92% 50%, 50% 98%, 8% 50%);
+}
+
+.shape-balance {
+  border-radius: 50%;
+}
+
+.char-name {
+  margin: 0;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.9rem;
+}
+
+.char-sub {
+  margin: 0;
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.stats {
+  margin-top: 6px;
+  display: grid;
+  gap: 4px;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 33px 1fr;
+  gap: 5px;
+  align-items: center;
+}
+
+.stat-row span {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+.stat-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+.stat-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--main), var(--accent));
+}
+
+.top-panel {
+  padding: 10px 14px;
+}
+
+h1 {
+  margin: 0;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: clamp(1.7rem, 5vw, 2.4rem);
+  letter-spacing: 0.08em;
+}
+
+.subtitle,
+.rule {
+  margin: 3px 0 0;
+  font-size: 0.92rem;
+  opacity: 0.9;
+}
+
+.hud-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.player-card,
+.center-card {
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px;
+}
+
+.player-card--p1 {
+  box-shadow: inset 0 0 0 1px rgba(0, 199, 178, 0.3);
+}
+
+.player-card--p2 {
+  box-shadow: inset 0 0 0 1px rgba(255, 151, 62, 0.3);
+}
+
+.name,
+.score,
+.buffs,
+.round-text,
+.timer,
+.status {
+  margin: 0;
+}
+
+.name {
+  font-family: 'Chakra Petch', sans-serif;
+  letter-spacing: 0.06em;
+}
+
+.score {
+  margin-top: 3px;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: clamp(1.3rem, 5vw, 2rem);
+}
+
+.buffs {
+  margin-top: 3px;
+  font-size: 0.8rem;
+  min-height: 1.2em;
+  opacity: 0.95;
+}
+
+.set-marks {
+  margin-top: 4px;
+  display: flex;
+  gap: 6px;
+}
+
+.set-mark {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.player-card--p1 .set-mark.is-on {
+  background: rgba(61, 238, 212, 0.94);
+  border-color: rgba(189, 255, 244, 0.95);
+}
+
+.player-card--p2 .set-mark.is-on {
+  background: rgba(255, 182, 108, 0.95);
+  border-color: rgba(255, 236, 202, 0.96);
+}
+
+.center-card {
+  min-width: 160px;
+  text-align: center;
+}
+
+.round-text {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  color: #ffd57a;
+}
+
+.timer {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
+  line-height: 1.05;
+}
+
+.status {
+  font-size: 0.82rem;
+  opacity: 0.9;
+}
+
+.set-score {
+  margin: 4px 0 0;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: rgba(236, 247, 244, 0.85);
+}
+
+.rule {
+  margin-top: 7px;
+}
+
+.arena-panel {
+  padding: 8px;
+}
+
+.arena-shell {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #0a1419;
+}
+
+.arena-overlay {
+  position: absolute;
+  inset: 0;
+  padding: clamp(8px, 1.4vw, 14px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.connection-banner {
+  align-self: center;
+  max-width: min(92%, 560px);
+  margin-bottom: 6px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 210, 120, 0.72);
+  background: rgba(24, 14, 5, 0.78);
+  color: #ffe7c3;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(3px);
+}
+
+.connection-banner::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 7px;
+  border-radius: 999px;
+  background: rgba(255, 195, 110, 0.95);
+  box-shadow: 0 0 0 0 rgba(255, 195, 110, 0.5);
+  vertical-align: middle;
+}
+
+.connection-banner.is-online {
+  border-color: rgba(123, 255, 208, 0.72);
+  background: rgba(4, 22, 17, 0.78);
+  color: #d6fff2;
+}
+
+.connection-banner.is-online::before {
+  background: rgba(110, 255, 204, 0.95);
+}
+
+.connection-banner.is-pulsing::before {
+  animation: reconnectPulse 1s ease-out infinite;
+}
+
+.connection-banner.is-hidden {
+  display: none;
+}
+
+#gameCanvas {
+  width: 100%;
+  max-height: 92vh;
+  aspect-ratio: 1 / 1;
+  display: block;
+  background: #0a1419;
+}
+
+.controls-title-wrap--overlay {
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: rgba(3, 11, 14, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(3px);
+}
+
+.touch-row--overlay {
+  margin-top: 0;
+  align-self: stretch;
+}
+
+.arena-overlay .action-btn,
+.arena-overlay .touch-pad,
+.arena-overlay .quick-item-btn {
+  pointer-events: auto;
+}
+
+.touch-row--overlay.one-handed {
+  grid-template-columns: 1fr;
+  align-items: end;
+  justify-items: center;
+}
+
+.touch-row--overlay.one-handed .touch-col.is-active {
+  grid-column: auto;
+  justify-self: center;
+  transform: none;
+}
+
+.hint--under {
+  margin-top: 8px;
+}
+
+@keyframes reconnectPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 195, 110, 0.48);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 195, 110, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 195, 110, 0);
+  }
+}
+
+@media (min-width: 1180px) {
+  .layout {
+    grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.75fr);
+    grid-template-areas:
+      "arena top"
+      "arena setup"
+      "arena online";
+    align-items: start;
+  }
+
+  .arena-panel {
+    grid-area: arena;
+    position: sticky;
+    top: 8px;
+    align-self: start;
+  }
+
+  .top-panel {
+    grid-area: top;
+  }
+
+  .setup-panel {
+    grid-area: setup;
+  }
+
+  .online-panel {
+    grid-area: online;
+  }
+}
+
+.item-guide {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.item-guide span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: #041217;
+}
+
+.pill.speed { background: #43e5d4; }
+.pill.power { background: #ffb56b; }
+.pill.guard { background: #95de7d; }
+.pill.fire { background: #ff7b56; }
+.pill.ice { background: #8ed5ff; }
+.pill.missile { background: #ffd772; }
+.pill.bomb { background: #ff927d; }
+
+.control-panel {
+  padding: 10px;
+}
+
+.controls-title-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.controls-title,
+.hint {
+  margin: 0;
+  font-size: 0.84rem;
+  opacity: 0.92;
+}
+
+.actions {
+  display: flex;
+  gap: 7px;
+}
+
+.action-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  color: #03211b;
+  background: linear-gradient(90deg, #00c7b2, #2ce4ba);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-btn--ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.touch-row {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.touch-col {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.touch-col.is-hidden {
+  display: none;
+}
+
+.touch-label {
+  margin: 0;
+  font-family: 'Chakra Petch', sans-serif;
+  letter-spacing: 0.08em;
+}
+
+.touch-pad {
+  width: min(36vw, 180px);
+  height: min(36vw, 180px);
+  border-radius: 50%;
+  position: relative;
+  border: 2px solid rgba(67, 229, 212, 0.75);
+  background:
+    radial-gradient(circle at 36% 30%, rgba(67, 229, 212, 0.2), transparent 50%),
+    rgba(4, 16, 20, 0.8);
+  touch-action: none;
+}
+
+.touch-pad--p2 {
+  border-color: rgba(255, 181, 107, 0.85);
+  background:
+    radial-gradient(circle at 64% 30%, rgba(255, 181, 107, 0.24), transparent 50%),
+    rgba(20, 12, 4, 0.8);
+}
+
+.touch-knob {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(67, 229, 212, 0.95);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.touch-knob--p2 {
+  background: rgba(255, 181, 107, 0.95);
+}
+
+.item-btn {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  padding: 9px 14px;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.96rem;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.44);
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.item-btn.is-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.touch-col .item-btn {
+  display: none;
+}
+
+.quick-item-btn {
+  position: absolute;
+  left: clamp(10px, 2vw, 20px);
+  bottom: clamp(10px, 2vw, 22px);
+  width: min(28vw, 132px);
+  height: min(28vw, 132px);
+  border-radius: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.56);
+  background: radial-gradient(circle at 30% 28%, rgba(255, 248, 206, 0.36), rgba(0, 0, 0, 0.66));
+  color: #eef8f5;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: clamp(0.86rem, 2.1vw, 1.04rem);
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  white-space: pre-line;
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.34);
+  touch-action: manipulation;
+}
+
+.quick-item-btn.is-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.hint {
+  margin-top: 8px;
+}
+
+body.focus-mode {
+  overflow: hidden;
+}
+
+body.focus-mode .online-panel,
+body.focus-mode .setup-panel,
+body.focus-mode .top-panel {
+  display: none;
+}
+
+body.focus-mode .layout {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+body.focus-mode .arena-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: #040b0f;
+}
+
+body.focus-mode .arena-shell {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 0;
+}
+
+body.focus-mode #gameCanvas {
+  width: min(100vw, 100vh);
+  height: auto;
+  max-height: none;
+}
+
+body.focus-mode .item-guide,
+body.focus-mode .hint--under {
+  display: none;
+}
+
+@media (max-width: 980px) {
+  .online-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+  }
+
+  .field-code {
+    grid-column: 1 / -1;
+  }
+
+  .duo-block,
+  .hud-grid,
+  .choice-grid,
+  .choice-grid--stage,
+  .mode-switch {
+    grid-template-columns: 1fr;
+  }
+
+  .center-card {
+    min-width: 0;
+  }
+
+  .controls-title-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

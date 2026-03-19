@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>タツ・トマーレ</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="site-header">
+        <div class="title-block">
+          <div class="title-kicker">Hide & Seek Boardrace</div>
+          <h1>タツ・トマーレ</h1>
+        </div>
+        <div id="room-pill" class="room-pill hidden"></div>
+      </header>
+
+      <main>
+        <section id="screen-join" class="screen">
+          <div class="join-card">
+            <div class="art-wrap">
+              <img class="hero-art" src="/assets/package-art.svg" alt="Kakurenbo Racer Package Art" />
+            </div>
+            <div class="join-form">
+              <label class="field">
+                <span>プレイヤー名</span>
+                <input id="input-name" type="text" maxlength="12" placeholder="なまえ" />
+              </label>
+              <label class="field">
+                <span>部屋コード</span>
+                <input id="input-room" type="text" maxlength="6" placeholder="例: A7K3" />
+              </label>
+              <div class="button-row">
+                <button id="btn-create" class="primary">新規部屋を作る</button>
+                <button id="btn-join" class="ghost">参加する</button>
+              </div>
+              <p class="hint">同じ部屋コードを入力すると途中復帰できます。</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-lobby" class="screen hidden">
+          <div class="panel">
+            <h2>ロビー</h2>
+            <div class="grid two">
+              <div>
+                <h3>参加者</h3>
+                <ul id="player-list" class="list"></ul>
+              </div>
+              <div>
+                <h3>ルール設定</h3>
+                <div class="settings">
+                  <label>
+                    <span>想定人数</span>
+                    <input id="set-players" type="number" min="2" max="12" />
+                  </label>
+                  <label>
+                    <span>カード最大値</span>
+                    <input id="set-cardmax" type="number" min="0" max="9" />
+                  </label>
+                  <label>
+                    <span>ゴール距離</span>
+                    <input id="set-track" type="number" min="6" max="20" />
+                  </label>
+                  <label>
+                    <span>チェックポイント</span>
+                    <input id="set-checkpoint" type="number" min="2" max="19" />
+                  </label>
+                  <label>
+                    <span>スナイプ上限</span>
+                    <input id="set-sniper" type="number" min="0" max="10" />
+                  </label>
+                  <label>
+                    <span>親の担当回数</span>
+                    <input id="set-parent" type="number" min="1" max="5" />
+                  </label>
+                  <label>
+                    <span>演出間隔(ms)</span>
+                    <input id="set-reveal" type="number" min="200" max="1500" step="50" />
+                  </label>
+                </div>
+                <div class="button-row">
+                  <button id="btn-save-settings" class="ghost">設定を保存</button>
+                  <button id="btn-start" class="primary">ゲーム開始</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-arrange" class="screen hidden">
+          <div class="panel">
+            <h2>並び替え（親のみ）</h2>
+            <p id="arrange-note" class="note"></p>
+            <ul id="arrange-list" class="list"></ul>
+            <div class="button-row">
+              <button id="btn-arrange-done" class="primary">並びを確定</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-select" class="screen hidden">
+          <div class="panel">
+            <h2>カード選択</h2>
+            <p id="select-status" class="note"></p>
+            <div id="card-options" class="cards"></div>
+          </div>
+        </section>
+
+        <section id="screen-reveal" class="screen hidden">
+          <div class="panel">
+            <h2>レース中</h2>
+            <p id="reveal-note" class="note"></p>
+            <div id="lane-list" class="lanes"></div>
+          </div>
+        </section>
+
+        <section id="screen-sniper" class="screen hidden">
+          <div class="panel">
+            <h2>スナイプタイム</h2>
+            <p id="sniper-note" class="note"></p>
+            <div id="sniper-list" class="lanes"></div>
+            <div class="button-row">
+              <button id="btn-skip-sniper" class="ghost">今回はスナイプしない</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-score" class="screen hidden">
+          <div class="panel">
+            <h2>結果</h2>
+            <div id="placement-list" class="placements"></div>
+            <h3>スコア</h3>
+            <ul id="score-list" class="list"></ul>
+            <div class="button-row">
+              <button id="btn-next-race" class="primary">次のレース</button>
+              <button id="btn-reset" class="ghost">ロビーに戻る</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-gameover" class="screen hidden">
+          <div class="panel">
+            <h2>最終結果</h2>
+            <ul id="final-list" class="list"></ul>
+            <div class="button-row">
+              <button id="btn-reset-final" class="primary">ロビーに戻る</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/client.js"></script>
+  </body>
+</html>

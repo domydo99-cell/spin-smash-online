@@ -1,0 +1,9 @@
+{
+  "builtAt": "2026-03-19T13:56:55.784Z",
+  "mode": "static",
+  "entry": "index.html",
+  "notes": [
+    "socket.io client script is removed for static hosting",
+    "online mode requires a realtime backend and is not available in static-only hosting"
+  ]
+}

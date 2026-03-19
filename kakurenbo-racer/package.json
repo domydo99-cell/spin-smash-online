@@ -1,0 +1,14 @@
+{
+  "name": "kakurenbo-racer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kakurenbo Racer - local multiplayer browser game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}

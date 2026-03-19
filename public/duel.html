@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SPIN SMASH | Online Duel</title>
+  <link rel="preload" href="duel.css" as="style" />
+  <link rel="preload" href="duel.js" as="script" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="duel.css" />
+</head>
+<body>
+  <main class="layout">
+    <section class="panel online-panel">
+      <div class="mode-switch" role="tablist" aria-label="モード選択">
+        <button id="modeLocalBtn" class="mode-btn" type="button">LOCAL 2P</button>
+        <button id="modeOnlineBtn" class="mode-btn" type="button">ONLINE</button>
+        <button id="modeSingleBtn" class="mode-btn" type="button">SINGLE</button>
+      </div>
+
+      <div id="onlineControls" class="online-controls">
+        <div class="online-grid">
+          <label class="field">
+            <span>表示名</span>
+            <input id="playerNameInput" type="text" maxlength="16" placeholder="Player" />
+          </label>
+
+          <label class="field">
+            <span>NPC</span>
+            <select id="npcCountSelect">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+            </select>
+          </label>
+
+          <button id="createRoomBtn" class="mini-btn" type="button">ルーム作成</button>
+
+          <label class="field field-code">
+            <span>参加コード</span>
+            <input id="joinCodeInput" type="text" maxlength="6" placeholder="ABCD" />
+          </label>
+
+          <button id="joinRoomBtn" class="mini-btn" type="button">参加</button>
+          <button id="leaveRoomBtn" class="mini-btn mini-btn--ghost" type="button">退出</button>
+        </div>
+      </div>
+
+      <p id="modeStatus" class="mode-status">ローカル2人対戦モード</p>
+      <p id="campaignInfo" class="campaign-info">-</p>
+    </section>
+
+    <section class="panel setup-panel">
+      <div class="choice-block">
+        <h2>STAGE SELECT</h2>
+        <div id="stageCards" class="choice-grid choice-grid--stage"></div>
+      </div>
+
+      <div class="duo-block">
+        <div class="choice-block">
+          <h2>P1 CHARACTER</h2>
+          <div id="p1CharCards" class="choice-grid"></div>
+        </div>
+
+        <div id="p2ChoiceBlock" class="choice-block">
+          <h2 id="p2CharTitle">P2 CHARACTER</h2>
+          <div id="p2CharCards" class="choice-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel top-panel">
+      <h1>SPIN SMASH</h1>
+      <p class="subtitle">キャラを選び、アイテムで強化して相手をリングアウト</p>
+
+      <div class="hud-grid">
+        <article class="player-card player-card--p1">
+          <p id="p1Name" class="name">P1</p>
+          <p id="p1Score" class="score">0</p>
+          <div id="p1SetMarks" class="set-marks" aria-label="P1の勝利本数"></div>
+          <p id="p1Buffs" class="buffs">BUFF: -</p>
+        </article>
+
+        <article class="center-card">
+          <p id="roundText" class="round-text">ROUND 1</p>
+          <p id="timerText" class="timer">45</p>
+          <p id="statusText" class="status">Startで開始</p>
+          <p id="setScoreText" class="set-score">先取2 | YOU 0 - 0 ENEMY</p>
+        </article>
+
+        <article class="player-card player-card--p2">
+          <p id="p2Name" class="name">P2</p>
+          <p id="p2Score" class="score">0</p>
+          <div id="p2SetMarks" class="set-marks" aria-label="P2の勝利本数"></div>
+          <p id="p2Buffs" class="buffs">BUFF: -</p>
+        </article>
+      </div>
+
+      <p id="ruleText" class="rule">先に <strong>2本</strong> 先取で勝ち</p>
+    </section>
+
+    <section class="panel arena-panel">
+      <div class="arena-shell">
+        <canvas id="gameCanvas" width="900" height="900" aria-label="対戦ゲーム画面"></canvas>
+
+        <div class="arena-overlay">
+          <div id="connectionBanner" class="connection-banner is-hidden" aria-live="polite"></div>
+
+          <div class="controls-title-wrap controls-title-wrap--overlay">
+            <p id="controlHint" class="controls-title">操作はスティックのみ。倒した方向へ移動</p>
+            <div class="actions">
+              <button id="startBtn" class="action-btn" type="button">Start</button>
+              <button id="resetBtn" class="action-btn action-btn--ghost" type="button">Reset</button>
+              <button id="focusBtn" class="action-btn action-btn--ghost" type="button">Focus</button>
+            </div>
+          </div>
+
+          <div id="touchRow" class="touch-row touch-row--overlay">
+            <div id="touchColP1" class="touch-col">
+              <p class="touch-label">P1</p>
+              <div id="padP1" class="touch-pad" aria-label="P1 コントローラー">
+                <div id="knobP1" class="touch-knob"></div>
+              </div>
+              <button id="itemBtnP1" class="item-btn is-hidden" type="button">ITEM</button>
+            </div>
+
+            <div id="touchColP2" class="touch-col">
+              <p class="touch-label">P2</p>
+              <div id="padP2" class="touch-pad touch-pad--p2" aria-label="P2 コントローラー">
+                <div id="knobP2" class="touch-knob touch-knob--p2"></div>
+              </div>
+              <button id="itemBtnP2" class="item-btn is-hidden" type="button">ITEM</button>
+            </div>
+          </div>
+
+          <button id="quickItemBtn" class="quick-item-btn is-hidden" type="button" aria-label="アイテム発動">ITEM</button>
+        </div>
+      </div>
+
+      <p id="hintText" class="hint hint--under">PC操作: P1 = WASD / P2 = 矢印キー</p>
+      <div class="item-guide">
+        <span><b class="pill power">⚡ POW</b> 攻撃/防御/速度が全部アップ</span>
+        <span><b class="pill fire">🔥 FIR</b> 炎弾を5秒発射</span>
+        <span><b class="pill ice">❄ ICE</b> 氷弾を5秒発射</span>
+        <span><b class="pill missile">🚀 MIS</b> ボタンでミサイル発射(大きく吹っ飛ばす)</span>
+        <span><b class="pill bomb">💣 BOM</b> ボタンで爆弾設置(大吹っ飛び)</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="duel.js"></script>
+</body>
+</html>

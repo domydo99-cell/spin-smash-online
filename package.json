@@ -1,0 +1,16 @@
+{
+  "name": "human-ai-racers-local",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local multiplayer browser version of Wild Derby",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "npm run build:web",
+    "build:web": "node scripts/build-static.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}
