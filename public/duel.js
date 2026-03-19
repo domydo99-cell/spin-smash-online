@@ -519,6 +519,7 @@ const state = {
   single: {
     stageIndex: 0,
     campaignComplete: false,
+    pendingAdvance: null,
   },
 };
 
@@ -1218,6 +1219,14 @@ function triggerItemUse(slotId) {
 }
 
 function updateStartButtonLabel() {
+  startBtn.disabled = false;
+
+  if (isSingleMode() && state.single.pendingAdvance) {
+    startBtn.textContent = 'Tap Arena';
+    startBtn.disabled = true;
+    return;
+  }
+
   if (state.phase === 'playing') {
     startBtn.textContent = isSingleMode() ? 'Retry Stage' : 'Rematch';
     return;
@@ -1234,6 +1243,26 @@ function updateStartButtonLabel() {
   }
 
   startBtn.textContent = 'Start';
+}
+
+function advanceSingleByTap() {
+  if (!isSingleMode()) return false;
+  const pending = state.single.pendingAdvance;
+  if (!pending) return false;
+
+  state.single.pendingAdvance = null;
+
+  if (pending === 'round') {
+    nextRound();
+    return true;
+  }
+
+  if (pending === 'stage') {
+    startMatch();
+    return true;
+  }
+
+  return false;
 }
 
 function switchMode(nextMode, initial = false) {
@@ -1347,6 +1376,8 @@ function resetScoresAndRound() {
 }
 
 function resetMatch(idle) {
+  state.single.pendingAdvance = null;
+
   if (isSingleMode()) {
     const stage = getCampaignStage();
     applyStage(stage.stageId);
@@ -1382,6 +1413,11 @@ function resetMatch(idle) {
 }
 
 function startMatch() {
+  if (isSingleMode() && state.single.pendingAdvance) {
+    setStatus('画面タップで次に進めます');
+    return;
+  }
+
   if (isOnlineMode()) {
     if (!online.enabled) {
       setStatus('先にルーム作成/参加してください');
@@ -1404,11 +1440,13 @@ function startMatch() {
     state.single.campaignComplete = false;
   }
 
+  state.single.pendingAdvance = null;
   resetMatch(false);
   emitSnapshotNow();
 }
 
 function nextRound() {
+  state.single.pendingAdvance = null;
   state.round += 1;
   resetRound();
   state.phase = 'playing';
@@ -1423,6 +1461,7 @@ function handleSingleMatchResult(heroWon) {
     playSfx('win');
     if (state.single.stageIndex >= CAMPAIGN_STAGES.length - 1) {
       state.single.campaignComplete = true;
+      state.single.pendingAdvance = null;
       state.phase = 'match_over';
       setStatus('CAMPAIGN CLEAR! 全ステージ制覇!');
       updateStartButtonLabel();
@@ -1437,13 +1476,15 @@ function handleSingleMatchResult(heroWon) {
     resetScoresAndRound();
     resetRound();
     state.phase = 'idle';
+    state.single.pendingAdvance = 'stage';
     setCampaignInfoText();
-    setStatus(`STAGE ${clearedStage} CLEAR! Startで次のステージへ`);
+    setStatus(`STAGE ${clearedStage} CLEAR! 画面タップで次ステージへ`);
     updateStartButtonLabel();
     updateHud();
     return;
   }
 
+  state.single.pendingAdvance = null;
   state.phase = 'match_over';
   const stageNo = state.single.stageIndex + 1;
   setStatus(`STAGE ${stageNo} 敗北... Retryで再挑戦`);
@@ -1475,7 +1516,13 @@ function endRound(winnerTeam, reason) {
   const hasWinner = state.scoreLeft >= CONFIG.pointsToWin || state.scoreRight >= CONFIG.pointsToWin;
   if (!hasWinner) {
     state.phase = 'round_over';
-    state.betweenTimer = CONFIG.roundInterval;
+    if (isSingleMode()) {
+      state.single.pendingAdvance = 'round';
+      state.betweenTimer = 0;
+      setStatus('ラウンド終了! 画面タップで次ラウンド');
+    } else {
+      state.betweenTimer = CONFIG.roundInterval;
+    }
     updateStartButtonLabel();
     updateHud();
     emitSnapshotNow();
@@ -2485,6 +2532,10 @@ function updateSimulation(dt) {
   if (state.phase === 'playing') {
     stepPlaying(dt);
   } else if (state.phase === 'round_over') {
+    if (isSingleMode() && state.single.pendingAdvance === 'round') {
+      updateParticles(dt);
+      return;
+    }
     state.betweenTimer -= dt;
     if (state.betweenTimer <= 0) {
       nextRound();
@@ -2736,11 +2787,12 @@ function drawGameScorePips(startX, y, filledCount, color) {
 }
 
 function drawInGameScoreBoard() {
-  const panelW = 260;
-  const panelH = 58;
+  const panelW = 280;
+  const panelH = 66;
   const panelX = center.x - panelW * 0.5;
   const panelY = 14;
   const rightLabel = isSingleMode() ? 'ENEMY' : getRightTeamLabel();
+  const timeLeft = Math.ceil(state.timer);
 
   ctx.save();
   ctx.fillStyle = 'rgba(3, 11, 14, 0.58)';
@@ -2758,8 +2810,16 @@ function drawInGameScoreBoard() {
   ctx.textAlign = 'right';
   ctx.fillText(rightLabel, panelX + panelW - 14, panelY + 19);
 
-  drawGameScorePips(panelX + 14, panelY + 41, state.scoreLeft, 'rgba(61, 238, 212, 0.95)');
-  drawGameScorePips(panelX + panelW - 14 - ((CONFIG.pointsToWin - 1) * 16), panelY + 41, state.scoreRight, 'rgba(255, 182, 108, 0.96)');
+  ctx.textAlign = 'center';
+  ctx.font = "bold 11px 'Chakra Petch', sans-serif";
+  ctx.fillStyle = 'rgba(236, 247, 244, 0.8)';
+  ctx.fillText('TIME', panelX + panelW * 0.5, panelY + 16);
+  ctx.font = "bold 24px 'Chakra Petch', sans-serif";
+  ctx.fillStyle = timeLeft <= 10 ? '#ff9f86' : '#ffe08e';
+  ctx.fillText(String(timeLeft), panelX + panelW * 0.5, panelY + 43);
+
+  drawGameScorePips(panelX + 14, panelY + 50, state.scoreLeft, 'rgba(61, 238, 212, 0.95)');
+  drawGameScorePips(panelX + panelW - 14 - ((CONFIG.pointsToWin - 1) * 16), panelY + 50, state.scoreRight, 'rgba(255, 182, 108, 0.96)');
 
   ctx.restore();
 }
@@ -2779,7 +2839,21 @@ function drawOverlay() {
     const title = isSingleMode() ? `SINGLE STAGE ${state.single.stageIndex + 1}` : `${getModeLabel()} BATTLE`;
     ctx.fillText(title, center.x, center.y - 20);
     ctx.font = "22px 'Noto Sans JP', sans-serif";
-    ctx.fillText('Startでバトル開始', center.x, center.y + 32);
+    if (isSingleMode() && state.single.pendingAdvance === 'stage') {
+      ctx.fillText('画面タップで次ステージ開始', center.x, center.y + 32);
+    } else {
+      ctx.fillText('Startでバトル開始', center.x, center.y + 32);
+    }
+  }
+
+  if (state.phase === 'round_over') {
+    ctx.fillText(`ROUND ${state.round} END`, center.x, center.y - 20);
+    ctx.font = "22px 'Noto Sans JP', sans-serif";
+    if (isSingleMode() && state.single.pendingAdvance === 'round') {
+      ctx.fillText('画面タップで次ラウンドへ', center.x, center.y + 32);
+    } else {
+      ctx.fillText('次ラウンド準備中...', center.x, center.y + 32);
+    }
   }
 
   if (state.phase === 'match_over') {
@@ -3474,6 +3548,14 @@ function bindUi() {
     setFocusMode(!uiState.focusMode);
   });
 
+  canvas.addEventListener('pointerdown', (event) => {
+    if (!isSingleMode()) return;
+    if (!state.single.pendingAdvance) return;
+    event.preventDefault();
+    unlockAudio();
+    advanceSingleByTap();
+  });
+
   window.addEventListener('keydown', (event) => {
     unlockAudio();
 
@@ -3496,6 +3578,10 @@ function bindUi() {
     }
     if (event.code === 'Slash') {
       triggerItemUse(getSecondaryControlRole());
+    }
+
+    if ((event.code === 'Space' || event.code === 'Enter') && advanceSingleByTap()) {
+      return;
     }
 
     if ((event.code === 'Space' || event.code === 'Enter') && (state.phase === 'idle' || state.phase === 'match_over')) {

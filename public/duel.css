@@ -37,6 +37,7 @@ body {
 }
 
 .online-panel {
+  order: 4;
   padding: 10px;
 }
 
@@ -136,6 +137,7 @@ body {
 }
 
 .setup-panel {
+  order: 3;
   padding: 10px;
   display: grid;
   gap: 10px;
@@ -326,6 +328,7 @@ body {
 }
 
 .top-panel {
+  order: 2;
   padding: 10px 14px;
 }
 
@@ -454,6 +457,7 @@ h1 {
 }
 
 .arena-panel {
+  order: 1;
   padding: 8px;
 }
 
