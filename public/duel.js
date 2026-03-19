@@ -3545,7 +3545,7 @@ function bootSelectionUi() {
 bootSelectionUi();
 bindUi();
 setupSocketHandlers();
-switchMode(PLAY_MODES.local, true);
+switchMode(PLAY_MODES.single, true);
 updateControlUi();
 resetMatch(true);
 registerServiceWorker();
