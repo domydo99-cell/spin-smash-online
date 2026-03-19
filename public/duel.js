@@ -1458,6 +1458,7 @@ function nextRound() {
 
 function handleSingleMatchResult(heroWon) {
   if (heroWon) {
+    playSfx('decide');
     playSfx('win');
     if (state.single.stageIndex >= CAMPAIGN_STAGES.length - 1) {
       state.single.campaignComplete = true;
@@ -1486,6 +1487,7 @@ function handleSingleMatchResult(heroWon) {
 
   state.single.pendingAdvance = null;
   state.phase = 'match_over';
+  playSfx('decide');
   const stageNo = state.single.stageIndex + 1;
   setStatus(`STAGE ${stageNo} 敗北... Retryで再挑戦`);
   updateStartButtonLabel();
@@ -1538,6 +1540,7 @@ function endRound(winnerTeam, reason) {
   state.phase = 'match_over';
   const champTeam = state.scoreLeft > state.scoreRight ? 'left' : 'right';
   setStatus(`${champTeam === 'left' ? 'P1' : getRightTeamLabel()} WIN! Rematchで再戦`);
+  playSfx('decide');
   playSfx('win');
   updateStartButtonLabel();
   updateHud();
@@ -2039,7 +2042,7 @@ function updateItem(dt) {
     picker.consumables.bomb = item.type === 'bomb' ? 1 : 0;
     picker.selectedConsumable = item.type;
     burstEffect(item.x, item.y, itemData.color);
-    playSfx('pickup');
+    playSfx('itemGet');
     if (previousType && previousType !== item.type) {
       setStatus(`${picker.slot} のアイテムを ${getItemIcon(item.type)} ${itemData.label} に上書き!`);
     } else {
@@ -2048,7 +2051,7 @@ function updateItem(dt) {
   } else {
     picker.buffs[item.type] = itemData.duration;
     burstEffect(item.x, item.y, itemData.color);
-    playSfx('pickup');
+    playSfx('itemGet');
 
     if (item.type === 'fire' || item.type === 'ice') {
       setStatus(`${picker.slot} が ${getItemIcon(item.type)} ${itemData.label} を取得!`);
@@ -3177,6 +3180,13 @@ function playSfx(type) {
     return;
   }
 
+  if (type === 'itemGet') {
+    playTone(500, 0.06, { type: 'triangle', gain: 0.034 });
+    playTone(760, 0.1, { type: 'triangle', gain: 0.028, when: 0.03 });
+    playTone(980, 0.12, { type: 'square', gain: 0.018, when: 0.07 });
+    return;
+  }
+
   if (type === 'pickup') {
     playTone(520, 0.06, { type: 'triangle', gain: 0.03 });
     playTone(720, 0.09, { type: 'triangle', gain: 0.022, when: 0.03 });
@@ -3220,6 +3230,13 @@ function playSfx(type) {
   if (type === 'ringout') {
     playTone(210, 0.12, { type: 'sawtooth', gain: 0.03 });
     playTone(160, 0.16, { type: 'sawtooth', gain: 0.02, when: 0.08 });
+    return;
+  }
+
+  if (type === 'decide') {
+    playTone(160, 0.08, { type: 'square', gain: 0.04 });
+    playTone(300, 0.1, { type: 'sawtooth', gain: 0.03, when: 0.02 });
+    playTone(520, 0.14, { type: 'triangle', gain: 0.022, when: 0.08 });
     return;
   }
 
