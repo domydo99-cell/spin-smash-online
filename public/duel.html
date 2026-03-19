@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SPIN SMASH | Online Duel</title>
   <link rel="preload" href="duel.css" as="style" />
-  <link rel="preload" href="duel.js" as="script" />
+  <link rel="preload" href="duel.js?v=20260319-1" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
@@ -15,7 +15,7 @@
   <main class="layout">
     <section class="panel online-panel">
       <div class="mode-switch" role="tablist" aria-label="モード選択">
-        <button id="modeSingleBtn" class="mode-btn" type="button">SINGLE</button>
+        <button id="modeSingleBtn" class="mode-btn is-active" type="button">SINGLE</button>
         <button id="modeOnlineBtn" class="mode-btn" type="button">ONLINE</button>
         <button id="modeLocalBtn" class="mode-btn" type="button">LOCAL 2P</button>
       </div>
@@ -151,6 +151,6 @@
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="duel.js"></script>
+  <script src="duel.js?v=20260319-1"></script>
 </body>
 </html>

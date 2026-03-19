@@ -1,4 +1,4 @@
-const CACHE_NAME = 'spin-smash-shell-v1';
+const CACHE_NAME = 'spin-smash-shell-v2';
 const SHELL_FILES = [
   '/',
   '/duel.html',
@@ -50,6 +50,21 @@ async function staleWhileRevalidate(request) {
   return cached || networkPromise || Response.error();
 }
 
+async function networkFirstAsset(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (_err) {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    return Response.error();
+  }
+}
+
 async function networkFirstNavigation(request) {
   const cache = await caches.open(CACHE_NAME);
   try {
@@ -77,6 +92,10 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (isStaticAsset) {
+    if (/\.(?:js|css)$/i.test(url.pathname)) {
+      event.respondWith(networkFirstAsset(event.request));
+      return;
+    }
     event.respondWith(staleWhileRevalidate(event.request));
   }
 });

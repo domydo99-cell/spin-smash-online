@@ -486,7 +486,7 @@ const roster = {
 };
 
 const state = {
-  playMode: PLAY_MODES.local,
+  playMode: PLAY_MODES.single,
   phase: 'idle',
   round: 1,
   timer: CONFIG.roundSeconds,
@@ -3515,7 +3515,9 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js')
+      .then((registration) => registration.update())
+      .catch(() => {});
   });
 }
 
