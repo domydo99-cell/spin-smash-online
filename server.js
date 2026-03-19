@@ -1007,6 +1007,39 @@ function duelOpenSlot(room) {
   return DUEL_GUEST_SLOTS.find((slot) => !room.players[slot]) || null;
 }
 
+function duelResetRematch(room) {
+  room.rematchReady = {
+    p1: false,
+    p2: false,
+    p3: false,
+    p4: false,
+  };
+}
+
+function duelRematchStatePayload(room) {
+  const readyByRole = {};
+  let readyCount = 0;
+  let requiredCount = 0;
+
+  DUEL_SLOTS.forEach((slot) => {
+    const joined = Boolean(room.players[slot]);
+    if (!joined) {
+      readyByRole[slot] = false;
+      return;
+    }
+    requiredCount += 1;
+    const ready = Boolean(room.rematchReady?.[slot]);
+    readyByRole[slot] = ready;
+    if (ready) readyCount += 1;
+  });
+
+  return {
+    readyByRole,
+    readyCount,
+    requiredCount,
+  };
+}
+
 function duelRoomStatePayload(room) {
   return {
     roomCode: room.code,
@@ -1014,6 +1047,7 @@ function duelRoomStatePayload(room) {
     players: duelPublicPlayers(room),
     humanCount: duelHumanCount(room),
     npcCount: room.npcCount || 0,
+    rematch: duelRematchStatePayload(room),
   };
 }
 
@@ -1057,6 +1091,7 @@ function leaveDuelRoom(socket, reasonForPeer) {
 
   const peer = room.players[role];
   room.players[role] = null;
+  duelResetRematch(room);
   io.to(duelChannel(code)).emit('duel_peer_left', {
     roomCode: code,
     role,
@@ -1093,6 +1128,12 @@ io.on('connection', (socket) => {
         p3: null,
         p4: null,
       },
+      rematchReady: {
+        p1: false,
+        p2: false,
+        p3: false,
+        p4: false,
+      },
     };
 
     duelRooms.set(code, room);
@@ -1128,6 +1169,7 @@ io.on('connection', (socket) => {
       id: socket.id,
       name: sanitizeDuelName(name, slot.toUpperCase()),
     };
+    duelResetRematch(room);
 
     duelSocketToRoom.set(socket.id, code);
     socket.join(duelChannel(code));
@@ -1157,8 +1199,38 @@ io.on('connection', (socket) => {
     emitDuelRoomState(room);
   });
 
+  socket.on('duel_rematch_ready', ({ ready }) => {
+    const code = duelSocketToRoom.get(socket.id);
+    if (!code) return;
+    const room = duelRooms.get(code);
+    if (!room) return;
+
+    const role = duelFindRoleBySocket(room, socket.id);
+    if (!role) return;
+
+    room.rematchReady = room.rematchReady || {};
+    room.rematchReady[role] = Boolean(ready);
+
+    const rematch = duelRematchStatePayload(room);
+    io.to(duelChannel(code)).emit('duel_rematch_state', rematch);
+
+    const canStart = rematch.requiredCount >= 2 && rematch.readyCount >= rematch.requiredCount;
+    if (!canStart) return;
+
+    duelResetRematch(room);
+    io.to(duelChannel(code)).emit('duel_rematch_state', duelRematchStatePayload(room));
+    io.to(duelChannel(code)).emit('duel_rematch_start');
+  });
+
   socket.on('duel_leave_room', () => {
     leaveDuelRoom(socket, 'ホストが退出しました。');
+  });
+
+  socket.on('duel_ping', ({ clientSentAt }) => {
+    socket.emit('duel_pong', {
+      clientSentAt: Number(clientSentAt) || 0,
+      serverSentAt: Date.now(),
+    });
   });
 
   socket.on('duel_input', ({ input }) => {

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SPIN SMASH | Online Duel</title>
   <link rel="preload" href="duel.css" as="style" />
-  <link rel="preload" href="duel.js?v=20260320-2" as="script" />
+  <link rel="preload" href="duel.js?v=20260320-3" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
@@ -88,6 +88,7 @@
 
         <div class="arena-overlay">
           <div id="connectionBanner" class="connection-banner is-hidden" aria-live="polite"></div>
+          <div id="netBadge" class="net-badge is-hidden" aria-live="polite">NET --</div>
 
           <div class="controls-title-wrap controls-title-wrap--overlay">
             <p id="controlHint" class="controls-title">操作はスティックのみ。倒した方向へ移動</p>
@@ -96,6 +97,12 @@
               <button id="resetBtn" class="action-btn action-btn--ghost" type="button">Reset</button>
               <button id="focusBtn" class="action-btn action-btn--ghost" type="button">Focus</button>
             </div>
+          </div>
+
+          <div id="rematchActions" class="rematch-actions is-hidden">
+            <button id="rematchBtn" class="action-btn" type="button">Rematch</button>
+            <button id="leaveQuickBtn" class="action-btn action-btn--ghost" type="button">Leave</button>
+            <p id="rematchStatus" class="rematch-status">再戦準備 0/0</p>
           </div>
 
           <div id="touchRow" class="touch-row touch-row--overlay">
@@ -151,6 +158,6 @@
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="duel.js?v=20260320-2"></script>
+  <script src="duel.js?v=20260320-3"></script>
 </body>
 </html>

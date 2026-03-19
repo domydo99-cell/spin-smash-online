@@ -63,6 +63,11 @@ const itemBtnP1 = document.getElementById('itemBtnP1');
 const itemBtnP2 = document.getElementById('itemBtnP2');
 const quickItemBtn = document.getElementById('quickItemBtn');
 const connectionBannerEl = document.getElementById('connectionBanner');
+const netBadgeEl = document.getElementById('netBadge');
+const rematchActionsEl = document.getElementById('rematchActions');
+const rematchBtn = document.getElementById('rematchBtn');
+const leaveQuickBtn = document.getElementById('leaveQuickBtn');
+const rematchStatusEl = document.getElementById('rematchStatus');
 
 const CONFIG = {
   width: 900,
@@ -371,6 +376,15 @@ const online = {
   remoteInputs: emptyRemoteInputs(),
   sendTimer: 0,
   snapshotTimer: 0,
+  pingTimer: 0,
+  pingPending: false,
+  pingSentAt: 0,
+  pingMs: null,
+  pingQuality: 'unknown',
+  rematchReadyByRole: {},
+  rematchReadyCount: 0,
+  rematchRequiredCount: 0,
+  rematchLocalReady: false,
 };
 
 const reconnectSession = {
@@ -502,6 +516,7 @@ const state = {
   activePlayerIds: ['p1', 'p2'],
   itemTimer: 3,
   item: null,
+  itemWarning: null,
   bullets: [],
   bombs: [],
   particles: [],
@@ -579,6 +594,80 @@ function hideConnectionBanner() {
   connectionBannerEl.classList.remove('is-online');
   connectionBannerEl.classList.remove('is-pulsing');
   connectionBannerEl.textContent = '';
+}
+
+function classifyPingQuality(ms) {
+  if (!Number.isFinite(ms)) return 'unknown';
+  if (ms <= 85) return 'good';
+  if (ms <= 170) return 'fair';
+  return 'poor';
+}
+
+function resetPingState() {
+  online.pingTimer = 0;
+  online.pingPending = false;
+  online.pingSentAt = 0;
+  online.pingMs = null;
+  online.pingQuality = 'unknown';
+}
+
+function renderNetBadge() {
+  if (!netBadgeEl) return;
+
+  const visible = isOnlineMode() && online.enabled;
+  netBadgeEl.classList.toggle('is-hidden', !visible);
+  if (!visible) return;
+
+  const msText = Number.isFinite(online.pingMs) ? `${Math.round(online.pingMs)}ms` : '--';
+  const qualityLabel = online.pingQuality === 'good'
+    ? 'GOOD'
+    : online.pingQuality === 'fair'
+      ? 'FAIR'
+      : online.pingQuality === 'poor'
+        ? 'POOR'
+        : '...';
+
+  netBadgeEl.textContent = `NET ${msText} ${qualityLabel}`;
+  netBadgeEl.classList.remove('quality-good', 'quality-fair', 'quality-poor');
+  if (online.pingQuality === 'good') netBadgeEl.classList.add('quality-good');
+  if (online.pingQuality === 'fair') netBadgeEl.classList.add('quality-fair');
+  if (online.pingQuality === 'poor') netBadgeEl.classList.add('quality-poor');
+}
+
+function resetRematchState() {
+  online.rematchReadyByRole = {};
+  online.rematchReadyCount = 0;
+  online.rematchRequiredCount = 0;
+  online.rematchLocalReady = false;
+}
+
+function applyRematchState(payload) {
+  const readyByRole = payload?.readyByRole || {};
+  const next = {};
+  ONLINE_PLAYER_ROLES.forEach((role) => {
+    next[role] = Boolean(readyByRole[role]);
+  });
+  online.rematchReadyByRole = next;
+  online.rematchReadyCount = clamp(Number(payload?.readyCount) || 0, 0, 4);
+  online.rematchRequiredCount = clamp(Number(payload?.requiredCount) || 0, 0, 4);
+
+  const ownRole = getOnlineOwnRole();
+  online.rematchLocalReady = Boolean(next[ownRole]);
+}
+
+function refreshRematchUi() {
+  if (!rematchActionsEl || !rematchBtn || !rematchStatusEl) return;
+
+  const visible = isOnlineMode() && online.enabled && state.phase === 'match_over';
+  rematchActionsEl.classList.toggle('is-hidden', !visible);
+  if (!visible) return;
+
+  rematchBtn.textContent = online.rematchLocalReady ? 'Ready ✓' : 'Rematch';
+  rematchBtn.classList.toggle('action-btn--ghost', online.rematchLocalReady);
+
+  const ready = online.rematchReadyCount;
+  const required = online.rematchRequiredCount;
+  rematchStatusEl.textContent = `再戦準備 ${ready}/${required}`;
 }
 
 function clearReconnectSession() {
@@ -682,6 +771,9 @@ function applyOnlineRoomState(payload) {
       online.remoteInputs[role] = { x: 0, y: 0, len: 0 };
     }
   });
+
+  applyRematchState(payload.rematch || {});
+  refreshRematchUi();
 }
 
 function getOnlineEnemyCount() {
@@ -729,6 +821,7 @@ function applyStage(stageId) {
   state.stageId = next.id;
   state.stage = next;
   state.itemTimer = randomRange(next.itemSpawnMin, next.itemSpawnMax);
+  state.itemWarning = null;
   audio.bgmStep = 0;
 }
 
@@ -956,6 +1049,10 @@ function resetOnlineState() {
   online.remoteInputs = emptyRemoteInputs();
   online.sendTimer = 0;
   online.snapshotTimer = 0;
+  resetPingState();
+  resetRematchState();
+  renderNetBadge();
+  refreshRematchUi();
 }
 
 function leaveOnlineRoom() {
@@ -965,6 +1062,30 @@ function leaveOnlineRoom() {
   clearReconnectSession();
   hideConnectionBanner();
   resetOnlineState();
+}
+
+function leaveOnlineFromUi(statusText = 'オンラインから退出しました') {
+  if (!isOnlineMode()) return;
+  leaveOnlineRoom();
+  setModeStatus(statusText);
+  resetMatch(true);
+  refreshSelectionUi();
+  updateControlUi();
+  resetStick(touchState.p1, knobP1);
+  resetStick(touchState.p2, knobP2);
+}
+
+function setRematchReady(nextReady, byUser = false) {
+  if (!isOnlineMode() || !online.enabled) return;
+  const ownRole = getOnlineOwnRole();
+  online.rematchLocalReady = Boolean(nextReady);
+  online.rematchReadyByRole[ownRole] = online.rematchLocalReady;
+  refreshRematchUi();
+
+  if (byUser && socket) {
+    socket.emit('duel_rematch_ready', { ready: online.rematchLocalReady });
+    setModeStatus(online.rematchLocalReady ? '再戦準備OK。全員の準備待ち' : '再戦準備を解除');
+  }
 }
 
 function setActivePlayers(ids) {
@@ -1135,6 +1256,7 @@ function updateControlUi() {
     startBtn.disabled = false;
     resetBtn.disabled = false;
     updateItemButtons();
+    refreshRematchUi();
     return;
   }
 
@@ -1149,6 +1271,7 @@ function updateControlUi() {
     startBtn.disabled = false;
     resetBtn.disabled = false;
     updateItemButtons();
+    refreshRematchUi();
     return;
   }
 
@@ -1163,6 +1286,7 @@ function updateControlUi() {
     startBtn.disabled = true;
     resetBtn.disabled = false;
     updateItemButtons();
+    refreshRematchUi();
     return;
   }
 
@@ -1174,7 +1298,7 @@ function updateControlUi() {
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = 'p1';
     controlHintEl.textContent = `ONLINE HOST | ROOM: ${online.roomCode} | ENEMY ${getOnlineEnemyCount()}体`;
-    startBtn.disabled = !online.peerReady;
+    startBtn.disabled = state.phase === 'match_over' ? true : !online.peerReady;
     resetBtn.disabled = false;
   } else {
     touchColP1.classList.add('is-hidden');
@@ -1189,6 +1313,7 @@ function updateControlUi() {
   }
 
   updateItemButtons();
+  refreshRematchUi();
 }
 
 function triggerItemUse(slotId) {
@@ -1230,6 +1355,12 @@ function updateStartButtonLabel() {
 
   if (state.phase === 'playing') {
     startBtn.textContent = isSingleMode() ? 'Retry Stage' : 'Rematch';
+    return;
+  }
+
+  if (isOnlineMode() && online.enabled && state.phase === 'match_over') {
+    startBtn.textContent = 'Rematch Vote';
+    startBtn.disabled = true;
     return;
   }
 
@@ -1361,6 +1492,7 @@ function resetRound() {
 
   state.timer = CONFIG.roundSeconds;
   state.item = null;
+  state.itemWarning = null;
   state.bullets = [];
   state.bombs = [];
   state.particles = [];
@@ -1440,6 +1572,11 @@ function startMatch() {
   if (isSingleMode() && state.single.campaignComplete) {
     state.single.stageIndex = 0;
     state.single.campaignComplete = false;
+  }
+
+  if (isOnlineMode() && online.enabled) {
+    resetRematchState();
+    refreshRematchUi();
   }
 
   state.single.pendingAdvance = null;
@@ -1973,15 +2110,34 @@ function useSelectedConsumable(player) {
   return true;
 }
 
-function spawnItem() {
+function createRandomItemSpec() {
   const type = ITEM_KEYS[Math.floor(Math.random() * ITEM_KEYS.length)];
   const angle = Math.random() * Math.PI * 2;
   const distance = randomRange(0, state.stage.arenaRadius - 110);
-
-  state.item = {
+  return {
     type,
     x: center.x + Math.cos(angle) * distance,
     y: center.y + Math.sin(angle) * distance,
+  };
+}
+
+function beginItemWarning(spec = createRandomItemSpec()) {
+  state.itemWarning = {
+    type: spec.type,
+    x: spec.x,
+    y: spec.y,
+    radius: CONFIG.itemRadius + 3,
+    life: 0.9,
+    rot: Math.random() * Math.PI * 2,
+  };
+  playSfx('spawnWarn');
+}
+
+function spawnItem(spec = createRandomItemSpec()) {
+  state.item = {
+    type: spec.type,
+    x: spec.x,
+    y: spec.y,
     radius: CONFIG.itemRadius,
     life: CONFIG.itemLife,
     rot: Math.random() * Math.PI * 2,
@@ -2051,9 +2207,24 @@ function spawnImpactFx(x, y, color, intensity = 1) {
 }
 
 function updateItem(dt) {
+  if (state.itemWarning) {
+    const warning = state.itemWarning;
+    warning.life -= dt;
+    warning.rot += dt * 3.6;
+    if (warning.life <= 0) {
+      spawnItem({
+        type: warning.type,
+        x: warning.x,
+        y: warning.y,
+      });
+      state.itemWarning = null;
+    }
+    return;
+  }
+
   if (!state.item) {
     state.itemTimer -= dt;
-    if (state.itemTimer <= 0) spawnItem();
+    if (state.itemTimer <= 0) beginItemWarning();
     return;
   }
 
@@ -2399,6 +2570,7 @@ function createSnapshot() {
     scoreRight: state.scoreRight,
     activePlayerIds: state.activePlayerIds.slice(),
     item: state.item ? { ...state.item } : null,
+    itemWarning: state.itemWarning ? { ...state.itemWarning } : null,
     bullets: state.bullets.map((bullet) => ({ ...bullet })),
     bombs: state.bombs.map((bomb) => ({ ...bomb })),
     players: state.activePlayers.map((player) => ({
@@ -2496,6 +2668,7 @@ function applySnapshot(snapshot) {
   state.scoreLeft = Number(snapshot.scoreLeft) || 0;
   state.scoreRight = Number(snapshot.scoreRight) || 0;
   state.item = snapshot.item ? { ...snapshot.item } : null;
+  state.itemWarning = snapshot.itemWarning ? { ...snapshot.itemWarning } : null;
   state.bullets = Array.isArray(snapshot.bullets)
     ? snapshot.bullets.map((bullet) => ({ ...bullet }))
     : [];
@@ -2523,6 +2696,27 @@ function updateHostSnapshot(dt) {
     online.snapshotTimer = 1 / 22;
     socket.emit('duel_snapshot', { snapshot: createSnapshot() });
   }
+}
+
+function updateNetworkPing(dt) {
+  if (!socket || !socket.connected) return;
+  if (!isOnlineMode() || !online.enabled) return;
+
+  online.pingTimer -= dt;
+  if (online.pingPending) {
+    if (Date.now() - online.pingSentAt > 3200) {
+      online.pingPending = false;
+      online.pingMs = 999;
+      online.pingQuality = 'poor';
+      online.pingTimer = 1.2;
+    }
+    return;
+  }
+  if (online.pingTimer > 0) return;
+
+  online.pingPending = true;
+  online.pingSentAt = Date.now();
+  socket.emit('duel_ping', { clientSentAt: online.pingSentAt });
 }
 
 function updateGuestInput(dt) {
@@ -2597,6 +2791,9 @@ function updateSimulation(dt) {
 
 function update(dt) {
   state.ringPulse += dt * 2.4;
+  updateNetworkPing(dt);
+  renderNetBadge();
+  refreshRematchUi();
 
   if (isOnlineMode() && online.enabled && !online.isHost) {
     updateGuestInput(dt);
@@ -2679,6 +2876,42 @@ function drawItem() {
   ctx.fillText(icon, 0, -3);
   ctx.font = "bold 10px 'Chakra Petch', sans-serif";
   ctx.fillText(data.label, 0, state.item.radius - 6);
+  ctx.restore();
+}
+
+function drawItemWarning() {
+  if (!state.itemWarning) return;
+
+  const warning = state.itemWarning;
+  const icon = getItemIcon(warning.type);
+  const alpha = clamp(warning.life / 0.9, 0, 1);
+  const pulse = 0.58 + Math.sin((1 - alpha) * 22) * 0.22;
+
+  ctx.save();
+  ctx.translate(warning.x, warning.y);
+  ctx.rotate(warning.rot);
+
+  ctx.beginPath();
+  ctx.arc(0, 0, warning.radius + 17, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(255, 255, 255, ${0.06 + pulse * 0.08})`;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(0, 0, warning.radius + 4, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(255, 245, 205, ${0.35 + pulse * 0.35})`;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(0, 0, warning.radius, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(34, 46, 52, ${0.45 + pulse * 0.18})`;
+  ctx.fill();
+
+  ctx.fillStyle = `rgba(255, 242, 217, ${0.72 + pulse * 0.24})`;
+  ctx.font = "bold 22px 'Noto Sans JP', sans-serif";
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(icon, 0, -1);
   ctx.restore();
 }
 
@@ -2936,6 +3169,7 @@ function render() {
     ctx.translate(ox, oy);
   }
   drawBackground();
+  drawItemWarning();
   drawItem();
   drawBombs();
   drawBullets();
@@ -3241,6 +3475,12 @@ function playSfx(type) {
     return;
   }
 
+  if (type === 'spawnWarn') {
+    playTone(430, 0.05, { type: 'square', gain: 0.014 });
+    playTone(540, 0.08, { type: 'triangle', gain: 0.012, when: 0.03 });
+    return;
+  }
+
   if (type === 'fireShot') {
     playTone(280, 0.05, { type: 'sawtooth', gain: 0.022, slideTo: 190 });
     return;
@@ -3302,15 +3542,19 @@ function setupSocketHandlers() {
   }
 
   socket.on('connect', () => {
+    resetPingState();
+    online.pingTimer = 0.25;
     if (isOnlineMode() && reconnectSession.active) {
       tryResumeReconnectSession();
       return;
     }
     hideConnectionBanner();
+    renderNetBadge();
   });
 
   socket.on('connect_error', () => {
     if (!isOnlineMode()) return;
+    online.pingPending = false;
     showConnectionBanner('接続に失敗しました。再試行中...', false, true);
     setModeStatus('接続エラー。再接続を試みています...');
   });
@@ -3360,6 +3604,8 @@ function setupSocketHandlers() {
     online.role = isOnlineHumanRole(payload.role) ? payload.role : (online.isHost ? 'p1' : 'p2');
     online.roomCode = payload.roomCode;
     online.remoteInputs = emptyRemoteInputs();
+    resetPingState();
+    online.pingTimer = 0.2;
     applyOnlineRoomState(payload);
     online.sendTimer = 0;
     online.snapshotTimer = 0;
@@ -3379,6 +3625,7 @@ function setupSocketHandlers() {
     resetMatch(true);
     refreshSelectionUi();
     updateControlUi();
+    renderNetBadge();
     emitSnapshotNow();
   });
 
@@ -3404,6 +3651,7 @@ function setupSocketHandlers() {
 
     refreshSelectionUi();
     updateControlUi();
+    refreshRematchUi();
   });
 
   socket.on('duel_peer_joined', ({ name, role, roomCode }) => {
@@ -3433,6 +3681,39 @@ function setupSocketHandlers() {
     setModeStatus(`${role ? role.toUpperCase() : 'GUEST'}(${name || 'Player'}) が退出`);
     refreshSelectionUi();
     updateControlUi();
+  });
+
+  socket.on('duel_rematch_state', (payload) => {
+    if (!isOnlineMode() || !online.enabled) return;
+    applyRematchState(payload || {});
+    const need = online.rematchRequiredCount;
+    if (need >= 2 && state.phase === 'match_over') {
+      setModeStatus(`再戦準備 ${online.rematchReadyCount}/${need}`);
+    }
+    refreshRematchUi();
+  });
+
+  socket.on('duel_rematch_start', () => {
+    if (!isOnlineMode() || !online.enabled) return;
+    resetRematchState();
+    refreshRematchUi();
+    if (online.isHost) {
+      startMatch();
+    } else {
+      setStatus('再戦開始!');
+    }
+  });
+
+  socket.on('duel_pong', (payload) => {
+    const sentAt = Number(payload?.clientSentAt) || 0;
+    if (!sentAt) return;
+    const now = Date.now();
+    const rtt = clamp(now - sentAt, 0, 9999);
+    online.pingPending = false;
+    online.pingMs = rtt;
+    online.pingQuality = classifyPingQuality(rtt);
+    online.pingTimer = 1.6;
+    renderNetBadge();
   });
 
   socket.on('duel_remote_input', ({ role, input }) => {
@@ -3475,6 +3756,7 @@ function setupSocketHandlers() {
   });
 
   socket.on('disconnect', () => {
+    online.pingPending = false;
     if (isOnlineMode() && online.enabled) {
       rememberReconnectSession();
       showConnectionBanner('接続が切れました。再接続しています...', false, true);
@@ -3545,16 +3827,23 @@ function bindUi() {
   });
 
   leaveRoomBtn.addEventListener('click', () => {
-    if (isOnlineMode()) {
-      leaveOnlineRoom();
-      setModeStatus('オンラインから退出しました');
-      resetMatch(true);
-      refreshSelectionUi();
-      updateControlUi();
-      resetStick(touchState.p1, knobP1);
-      resetStick(touchState.p2, knobP2);
-    }
+    leaveOnlineFromUi();
   });
+
+  if (leaveQuickBtn) {
+    leaveQuickBtn.addEventListener('click', () => {
+      leaveOnlineFromUi('オンライン対戦を終了しました');
+    });
+  }
+
+  if (rematchBtn) {
+    rematchBtn.addEventListener('click', () => {
+      if (!isOnlineMode() || !online.enabled) return;
+      if (state.phase !== 'match_over') return;
+      setRematchReady(!online.rematchLocalReady, true);
+      refreshRematchUi();
+    });
+  }
 
   if (npcCountSelectEl) {
     npcCountSelectEl.addEventListener('change', () => {
@@ -3646,6 +3935,10 @@ function bindUi() {
     }
 
     if ((event.code === 'Space' || event.code === 'Enter') && advanceSingleByTap()) {
+      return;
+    }
+
+    if ((event.code === 'Space' || event.code === 'Enter') && isOnlineMode() && online.enabled && state.phase === 'match_over') {
       return;
     }
 
