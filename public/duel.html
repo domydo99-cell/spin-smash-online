@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SPIN SMASH | Online Duel</title>
   <link rel="preload" href="duel.css" as="style" />
-  <link rel="preload" href="duel.js?v=20260320-3" as="script" />
+  <link rel="preload" href="duel.js?v=20260320-4" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
@@ -90,15 +90,6 @@
           <div id="connectionBanner" class="connection-banner is-hidden" aria-live="polite"></div>
           <div id="netBadge" class="net-badge is-hidden" aria-live="polite">NET --</div>
 
-          <div class="controls-title-wrap controls-title-wrap--overlay">
-            <p id="controlHint" class="controls-title">操作はスティックのみ。倒した方向へ移動</p>
-            <div class="actions">
-              <button id="startBtn" class="action-btn" type="button">Start</button>
-              <button id="resetBtn" class="action-btn action-btn--ghost" type="button">Reset</button>
-              <button id="focusBtn" class="action-btn action-btn--ghost" type="button">Focus</button>
-            </div>
-          </div>
-
           <div id="touchRow" class="touch-row touch-row--overlay">
             <div id="touchColP1" class="touch-col">
               <p class="touch-label">P1</p>
@@ -118,6 +109,15 @@
           </div>
 
           <button id="quickItemBtn" class="quick-item-btn is-hidden" type="button" aria-label="アイテム発動">ITEM</button>
+        </div>
+      </div>
+
+      <div class="controls-title-wrap controls-title-wrap--arena">
+        <p id="controlHint" class="controls-title">操作はスティックのみ。倒した方向へ移動</p>
+        <div class="actions">
+          <button id="startBtn" class="action-btn" type="button">Start</button>
+          <button id="resetBtn" class="action-btn action-btn--ghost" type="button">Reset</button>
+          <button id="focusBtn" class="action-btn action-btn--ghost" type="button">Focus</button>
         </div>
       </div>
 
@@ -158,6 +158,6 @@
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="duel.js?v=20260320-3"></script>
+  <script src="duel.js?v=20260320-4"></script>
 </body>
 </html>
