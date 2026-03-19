@@ -15,9 +15,9 @@
   <main class="layout">
     <section class="panel online-panel">
       <div class="mode-switch" role="tablist" aria-label="モード選択">
-        <button id="modeLocalBtn" class="mode-btn" type="button">LOCAL 2P</button>
-        <button id="modeOnlineBtn" class="mode-btn" type="button">ONLINE</button>
         <button id="modeSingleBtn" class="mode-btn" type="button">SINGLE</button>
+        <button id="modeOnlineBtn" class="mode-btn" type="button">ONLINE</button>
+        <button id="modeLocalBtn" class="mode-btn" type="button">LOCAL 2P</button>
       </div>
 
       <div id="onlineControls" class="online-controls">
@@ -50,25 +50,6 @@
 
       <p id="modeStatus" class="mode-status">ローカル2人対戦モード</p>
       <p id="campaignInfo" class="campaign-info">-</p>
-    </section>
-
-    <section class="panel setup-panel">
-      <div class="choice-block">
-        <h2>STAGE SELECT</h2>
-        <div id="stageCards" class="choice-grid choice-grid--stage"></div>
-      </div>
-
-      <div class="duo-block">
-        <div class="choice-block">
-          <h2>P1 CHARACTER</h2>
-          <div id="p1CharCards" class="choice-grid"></div>
-        </div>
-
-        <div id="p2ChoiceBlock" class="choice-block">
-          <h2 id="p2CharTitle">P2 CHARACTER</h2>
-          <div id="p2CharCards" class="choice-grid"></div>
-        </div>
-      </div>
     </section>
 
     <section class="panel top-panel">
@@ -113,9 +94,29 @@
             <div class="actions">
               <button id="startBtn" class="action-btn" type="button">Start</button>
               <button id="resetBtn" class="action-btn action-btn--ghost" type="button">Reset</button>
+              <button id="setupToggleBtn" class="action-btn action-btn--ghost" type="button">Select</button>
               <button id="focusBtn" class="action-btn action-btn--ghost" type="button">Focus</button>
             </div>
           </div>
+
+          <section id="arenaSetupPanel" class="arena-setup-panel is-hidden" aria-label="ステージとキャラクター選択">
+            <div class="choice-block">
+              <h2>STAGE SELECT</h2>
+              <div id="stageCards" class="choice-grid choice-grid--stage"></div>
+            </div>
+
+            <div class="duo-block">
+              <div class="choice-block">
+                <h2>P1 CHARACTER</h2>
+                <div id="p1CharCards" class="choice-grid"></div>
+              </div>
+
+              <div id="p2ChoiceBlock" class="choice-block">
+                <h2 id="p2CharTitle">P2 CHARACTER</h2>
+                <div id="p2CharCards" class="choice-grid"></div>
+              </div>
+            </div>
+          </section>
 
           <div id="touchRow" class="touch-row touch-row--overlay">
             <div id="touchColP1" class="touch-col">

@@ -47,8 +47,10 @@ const hintTextEl = document.getElementById('hintText');
 
 const startBtn = document.getElementById('startBtn');
 const resetBtn = document.getElementById('resetBtn');
+const setupToggleBtn = document.getElementById('setupToggleBtn');
 const focusBtn = document.getElementById('focusBtn');
 const controlHintEl = document.getElementById('controlHint');
+const arenaSetupPanelEl = document.getElementById('arenaSetupPanel');
 
 const touchColP1 = document.getElementById('touchColP1');
 const touchColP2 = document.getElementById('touchColP2');
@@ -530,6 +532,7 @@ const audio = {
 const uiState = {
   focusMode: false,
   activeItemSlot: null,
+  setupPanelOpen: false,
 };
 
 function isSingleMode() {
@@ -547,6 +550,17 @@ function setStatus(text) {
 
 function setModeStatus(text) {
   modeStatusEl.textContent = text;
+}
+
+function setArenaSetupOpen(open) {
+  const next = Boolean(open);
+  uiState.setupPanelOpen = next;
+  if (arenaSetupPanelEl) {
+    arenaSetupPanelEl.classList.toggle('is-hidden', !next);
+  }
+  if (setupToggleBtn) {
+    setupToggleBtn.textContent = next ? 'Close Select' : 'Select';
+  }
 }
 
 function showConnectionBanner(text, onlineTone = false, pulsing = false) {
@@ -755,6 +769,7 @@ function selectCharacter(index, charId, byUser = false) {
     && index === 1
     && socket
   ) {
+    setArenaSetupOpen(false);
     socket.emit('duel_select', {
       type: 'player_char',
       value: charId,
@@ -764,6 +779,7 @@ function selectCharacter(index, charId, byUser = false) {
   }
 
   if (byUser) {
+    setArenaSetupOpen(false);
     resetMatch(true);
     emitSnapshotNow();
   }
@@ -777,6 +793,7 @@ function selectStage(stageId, byUser = false) {
   refreshSelectionUi();
 
   if (byUser) {
+    setArenaSetupOpen(false);
     resetMatch(true);
     emitSnapshotNow();
   }
@@ -1229,6 +1246,7 @@ function switchMode(nextMode, initial = false) {
 
   state.playMode = nextMode;
   state.single.campaignComplete = false;
+  setArenaSetupOpen(false);
 
   if (nextMode === PLAY_MODES.local) {
     clearReconnectSession();
@@ -3429,6 +3447,12 @@ function bindUi() {
     resetStick(touchState.p2, knobP2);
     emitSnapshotNow();
   });
+
+  if (setupToggleBtn) {
+    setupToggleBtn.addEventListener('click', () => {
+      setArenaSetupOpen(!uiState.setupPanelOpen);
+    });
+  }
 
   bindPressAction(itemBtnP1, () => {
     unlockAudio();

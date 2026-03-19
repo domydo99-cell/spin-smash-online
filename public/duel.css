@@ -475,6 +475,26 @@ h1 {
   pointer-events: none;
 }
 
+.arena-setup-panel {
+  align-self: stretch;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(2, 10, 13, 0.72);
+  backdrop-filter: blur(4px);
+  max-height: min(46vh, 460px);
+  overflow: auto;
+}
+
+.arena-setup-panel.is-hidden {
+  display: none;
+}
+
+.arena-setup-panel .choice-block + .choice-block {
+  margin-top: 8px;
+}
+
 .connection-banner {
   align-self: center;
   max-width: min(92%, 560px);
@@ -544,6 +564,7 @@ h1 {
 }
 
 .arena-overlay .action-btn,
+.arena-overlay .arena-setup-panel,
 .arena-overlay .touch-pad,
 .arena-overlay .quick-item-btn {
   pointer-events: auto;
@@ -582,7 +603,6 @@ h1 {
     grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.75fr);
     grid-template-areas:
       "arena top"
-      "arena setup"
       "arena online";
     align-items: start;
   }
@@ -596,10 +616,6 @@ h1 {
 
   .top-panel {
     grid-area: top;
-  }
-
-  .setup-panel {
-    grid-area: setup;
   }
 
   .online-panel {
@@ -845,6 +861,14 @@ body.focus-mode .hint--under {
 }
 
 @media (max-width: 980px) {
+  .arena-panel {
+    order: 2;
+  }
+
+  .top-panel {
+    order: 3;
+  }
+
   .online-grid {
     grid-template-columns: 1fr 1fr;
     align-items: stretch;
