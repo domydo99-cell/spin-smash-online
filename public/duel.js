@@ -429,6 +429,7 @@ function createPlayer({ id, slot, team, controls = null, isBot = false }) {
     aimY: 0,
     cooldownFire: 0,
     cooldownIce: 0,
+    itemDecisionTimer: randomRange(0.28, 0.7),
     ai: {
       aggression: 1,
       edgeCare: 1,
@@ -1324,6 +1325,7 @@ function resetPlayer(player, x, y) {
   player.aimY = 0;
   player.cooldownFire = 0;
   player.cooldownIce = 0;
+  player.itemDecisionTimer = randomRange(0.24, 0.64);
   player.radius = player.baseRadius;
 
   Object.keys(player.buffs).forEach((key) => {
@@ -1885,6 +1887,50 @@ function triggerAutoShots(player, dt) {
     }
   } else {
     player.cooldownIce = 0;
+  }
+}
+
+function triggerBotConsumable(player, dt) {
+  if (!player?.isBot || state.phase !== 'playing') return;
+  if (player.freezeTimer > 0) return;
+
+  const type = getPreferredConsumable(player);
+  if (!type || getTotalConsumables(player) <= 0) return;
+
+  player.itemDecisionTimer -= dt;
+  if (player.itemDecisionTimer > 0) return;
+  player.itemDecisionTimer = randomRange(0.2, 0.58);
+
+  const target = getNearestOpponent(player);
+  if (!target) return;
+
+  const toTargetX = target.x - player.x;
+  const toTargetY = target.y - player.y;
+  const dist = Math.hypot(toTargetX, toTargetY) || 1;
+  const tx = toTargetX / dist;
+  const ty = toTargetY / dist;
+  const facing = player.aimX * tx + player.aimY * ty;
+  const aggression = clamp(player.ai?.aggression ?? 1, 0.7, 1.45);
+
+  if (type === 'missile') {
+    const inRange = dist <= 440;
+    const inFront = facing >= 0.3;
+    if (!inRange || !inFront) return;
+    const chance = clamp(0.26 + aggression * 0.22 + (dist < 220 ? 0.2 : 0), 0.2, 0.86);
+    if (Math.random() <= chance) {
+      useSelectedConsumable(player);
+    }
+    return;
+  }
+
+  if (type === 'bomb') {
+    const closeEnough = dist <= 168;
+    const dangerZone = Math.hypot(player.x - center.x, player.y - center.y) > state.stage.arenaRadius * 0.72;
+    if (!closeEnough && !dangerZone) return;
+    const chance = clamp(0.22 + aggression * 0.2 + (closeEnough ? 0.24 : 0) + (dangerZone ? 0.12 : 0), 0.2, 0.84);
+    if (Math.random() <= chance) {
+      useSelectedConsumable(player);
+    }
   }
 }
 
@@ -2509,6 +2555,7 @@ function stepPlaying(dt) {
 
   state.activePlayers.forEach((player) => {
     triggerAutoShots(player, dt);
+    triggerBotConsumable(player, dt);
   });
 
   for (let i = 0; i < state.activePlayers.length; i += 1) {
@@ -2905,8 +2952,8 @@ function buffList(player) {
   if (player?.buffs?.power > 0) list.push('POW');
   if (player?.buffs?.fire > 0) list.push('FIR');
   if (player?.buffs?.ice > 0) list.push('ICE');
-  if ((player?.consumables?.missile || 0) > 0) list.push(`MISx${player.consumables.missile}`);
-  if ((player?.consumables?.bomb || 0) > 0) list.push(`BOMx${player.consumables.bomb}`);
+  if ((player?.consumables?.missile || 0) > 0) list.push('MIS');
+  if ((player?.consumables?.bomb || 0) > 0) list.push('BOM');
   if ((player?.freezeTimer || 0) > 0) list.push('FRZ');
   return list.length ? `BUFF: ${list.join(' / ')}` : 'BUFF: -';
 }
@@ -2939,13 +2986,13 @@ function updateItemButton(buttonEl, player) {
   buttonEl.classList.toggle('is-hidden', !visible);
   if (!visible) {
     buttonEl.textContent = '🎒 ITEM';
+    buttonEl.setAttribute('aria-label', 'アイテムなし');
     return;
   }
 
-  const missileCount = player.consumables.missile || 0;
-  const bombCount = player.consumables.bomb || 0;
   const selectedIcon = getItemIcon(type);
-  buttonEl.textContent = `${selectedIcon} M${missileCount} / 💣 B${bombCount}`;
+  buttonEl.textContent = selectedIcon;
+  buttonEl.setAttribute('aria-label', `${getConsumableLabel(type)}を使用`);
 }
 
 function updateItemButtons() {
@@ -2959,6 +3006,7 @@ function updateItemButtons() {
   if (!slot || !roster[slot]) {
     quickItemBtn.classList.add('is-hidden');
     quickItemBtn.textContent = '🎒 ITEM';
+    quickItemBtn.setAttribute('aria-label', 'アイテムなし');
     return;
   }
 
@@ -2970,13 +3018,13 @@ function updateItemButtons() {
   quickItemBtn.classList.toggle('is-hidden', !visible);
   if (!visible || !type) {
     quickItemBtn.textContent = '🎒 ITEM';
+    quickItemBtn.setAttribute('aria-label', 'アイテムなし');
     return;
   }
 
-  const missileCount = player.consumables.missile || 0;
-  const bombCount = player.consumables.bomb || 0;
   const icon = getItemIcon(type);
-  quickItemBtn.textContent = `${icon} ${getConsumableLabel(type)}\n🚀 ${missileCount}  💣 ${bombCount}`;
+  quickItemBtn.textContent = icon;
+  quickItemBtn.setAttribute('aria-label', `${getConsumableLabel(type)}を使用`);
 }
 
 function renderSetMarks(container, wins) {
