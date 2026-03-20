@@ -295,6 +295,18 @@ body {
   background: linear-gradient(130deg, #2d1611, #160b09);
 }
 
+.stage-mini--storm {
+  background: linear-gradient(130deg, #0f2a35, #0c1821);
+}
+
+.stage-mini--gravity {
+  background: linear-gradient(130deg, #25193b, #120f20);
+}
+
+.stage-mini--collapse {
+  background: linear-gradient(130deg, #2b1a1f, #160f12);
+}
+
 .stage-desc {
   margin: 0;
   font-size: 0.74rem;
@@ -408,6 +420,34 @@ body {
   animation: previewPulseStrong 1s ease-in-out infinite;
 }
 
+.stage-preview--storm .stage-preview-arena {
+  background: linear-gradient(135deg, #0f2a35, #0c1821);
+}
+
+.stage-preview--storm .preview-gimmick {
+  background:
+    repeating-linear-gradient(120deg, rgba(146, 216, 255, 0.12) 0 6px, transparent 6px 18px);
+  animation: previewSlide 0.9s linear infinite;
+}
+
+.stage-preview--gravity .stage-preview-arena {
+  background: linear-gradient(135deg, #271a40, #141022);
+}
+
+.stage-preview--gravity .preview-gimmick {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(218, 173, 255, 0.28), transparent 40%);
+  animation: previewPulse 1.1s ease-in-out infinite;
+}
+
+.stage-preview--collapse .stage-preview-arena {
+  background: linear-gradient(135deg, #2b1a1f, #160f12);
+}
+
+.stage-preview--collapse .preview-ring {
+  animation: previewCollapse 2.2s ease-in-out infinite;
+}
+
 @keyframes previewOrbitA {
   0% { transform: translate(-50%, -50%) rotate(0deg) translateX(42px); }
   100% { transform: translate(-50%, -50%) rotate(360deg) translateX(42px); }
@@ -432,6 +472,11 @@ body {
 @keyframes previewPulseStrong {
   0%, 100% { opacity: 0.45; transform: scale(0.95); }
   50% { opacity: 0.96; transform: scale(1.05); }
+}
+
+@keyframes previewCollapse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.86; }
+  50% { transform: translate(-50%, -50%) scale(0.78); opacity: 0.95; }
 }
 
 .char-card {

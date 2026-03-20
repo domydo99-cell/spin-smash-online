@@ -207,8 +207,8 @@ const STAGES = [
   {
     id: 'neon',
     name: 'Neon Dome',
-    desc: '照明パルスで視覚ノイズ。標準バランス',
-    gimmick: 'ネオン脈動（視覚演出）',
+    desc: '周期的なショック波を見切る読み合い',
+    gimmick: 'Shock Pulse（中心から衝撃波）',
     arenaRadius: 382,
     drag: 0.966,
     impactScale: 1,
@@ -225,8 +225,8 @@ const STAGES = [
   {
     id: 'glacier',
     name: 'Glacier Ring',
-    desc: '滑走しやすく慣性が残る。高速展開',
-    gimmick: '低摩擦スリップ',
+    desc: '衝突で氷床が割れ、滑走ゾーンが生まれる',
+    gimmick: 'Break Ice（低摩擦ゾーン）',
     arenaRadius: 368,
     drag: 0.984,
     impactScale: 1.06,
@@ -243,8 +243,8 @@ const STAGES = [
   {
     id: 'magma',
     name: 'Magma Pit',
-    desc: '重い挙動と高い衝撃力で一撃が重い',
-    gimmick: '高インパクト衝突',
+    desc: '噴出口の予告から吹き上げを避ける',
+    gimmick: 'Vent Burst（噴火ノックバック）',
     arenaRadius: 398,
     drag: 0.948,
     impactScale: 1.15,
@@ -257,6 +257,60 @@ const STAGES = [
     ringColor: 'rgba(255, 178, 120, 0.65)',
     glowColor: 'rgba(255, 112, 72, %A%)',
     miniClass: 'stage-mini--magma',
+  },
+  {
+    id: 'storm',
+    name: 'Storm Alley',
+    desc: '風向きが定期変化し、移動と弾道が流される',
+    gimmick: 'Wind Shift（周期的な横風）',
+    arenaRadius: 386,
+    drag: 0.962,
+    impactScale: 1.03,
+    speedScale: 1,
+    projectileScale: 1.02,
+    itemSpawnMin: 2,
+    itemSpawnMax: 4,
+    bgTop: '#0d1f29',
+    bgBottom: '#0b1720',
+    ringColor: 'rgba(170, 222, 255, 0.62)',
+    glowColor: 'rgba(126, 197, 255, %A%)',
+    miniClass: 'stage-mini--storm',
+  },
+  {
+    id: 'gravity',
+    name: 'Gravity Core',
+    desc: '吸引と斥力が切り替わり、軌道が変化する',
+    gimmick: 'Gravity Flip（引力/斥力）',
+    arenaRadius: 382,
+    drag: 0.968,
+    impactScale: 1.05,
+    speedScale: 1,
+    projectileScale: 1,
+    itemSpawnMin: 2.1,
+    itemSpawnMax: 4,
+    bgTop: '#1a1030',
+    bgBottom: '#0d0a1a',
+    ringColor: 'rgba(213, 191, 255, 0.62)',
+    glowColor: 'rgba(184, 132, 255, %A%)',
+    miniClass: 'stage-mini--gravity',
+  },
+  {
+    id: 'collapse',
+    name: 'Collapse Ring',
+    desc: '終盤にリングが縮小し、決着が早まる',
+    gimmick: 'Ring Collapse（残り20秒から縮小）',
+    arenaRadius: 394,
+    drag: 0.962,
+    impactScale: 1.08,
+    speedScale: 1,
+    projectileScale: 1.02,
+    itemSpawnMin: 1.9,
+    itemSpawnMax: 3.6,
+    bgTop: '#211819',
+    bgBottom: '#120d0f',
+    ringColor: 'rgba(255, 196, 196, 0.64)',
+    glowColor: 'rgba(255, 124, 140, %A%)',
+    miniClass: 'stage-mini--collapse',
   },
 ];
 
@@ -282,104 +336,104 @@ const ITEM_ICONS = {
 const CAMPAIGN_STAGES = [
   {
     id: 'stage1',
-    title: 'Rookie Spin',
-    stageId: 'neon',
+    title: 'Classic Opening',
+    stageId: 'classic',
     enemies: [
       {
         charId: 'swift',
-        slot: 'CPU-ALFA',
-        scale: { attack: 0.95, defense: 0.95, speed: 1.04, size: 0.98, mass: 0.96 },
-        ai: { aggression: 0.9, edgeCare: 1.15, strafe: 0.35, jitter: 0.45 },
+        slot: 'CPU-ALPHA',
+        scale: { attack: 0.96, defense: 0.96, speed: 1.02, size: 0.98, mass: 0.97 },
+        ai: { aggression: 0.9, edgeCare: 1.12, strafe: 0.32, jitter: 0.42 },
       },
     ],
   },
   {
     id: 'stage2',
-    title: 'Cold Sprint',
-    stageId: 'glacier',
+    title: 'Pulse Clash',
+    stageId: 'neon',
     enemies: [
       {
         charId: 'blaze',
         slot: 'CPU-BLAZE',
-        scale: { attack: 1.08, defense: 1.0, speed: 1.06, size: 1.0, mass: 1.02 },
-        ai: { aggression: 1.05, edgeCare: 1.08, strafe: 0.5, jitter: 0.38 },
+        scale: { attack: 1.08, defense: 1.01, speed: 1.05, size: 1.0, mass: 1.02 },
+        ai: { aggression: 1.03, edgeCare: 1.08, strafe: 0.45, jitter: 0.36 },
       },
     ],
   },
   {
     id: 'stage3',
-    title: 'Molten Wall',
-    stageId: 'magma',
+    title: 'Cracked Ice',
+    stageId: 'glacier',
     enemies: [
       {
         charId: 'fort',
         slot: 'CPU-FORT',
-        scale: { attack: 1.14, defense: 1.16, speed: 1.03, size: 1.03, mass: 1.15 },
-        ai: { aggression: 1.05, edgeCare: 1.2, strafe: 0.32, jitter: 0.28 },
+        scale: { attack: 1.12, defense: 1.14, speed: 1.05, size: 1.02, mass: 1.13 },
+        ai: { aggression: 1.06, edgeCare: 1.19, strafe: 0.34, jitter: 0.3 },
       },
     ],
   },
   {
     id: 'stage4',
-    title: 'Twin Strike',
-    stageId: 'neon',
+    title: 'Vent Pressure',
+    stageId: 'magma',
     enemies: [
       {
-        charId: 'swift',
-        slot: 'CPU-RUSH',
-        scale: { attack: 1.06, defense: 1.04, speed: 1.15, size: 0.96, mass: 0.96 },
-        ai: { aggression: 1.06, edgeCare: 1.08, strafe: 0.65, jitter: 0.55 },
-      },
-      {
-        charId: 'balance',
-        slot: 'CPU-CORE',
-        scale: { attack: 1.08, defense: 1.1, speed: 1.08, size: 1.0, mass: 1.06 },
-        ai: { aggression: 1.0, edgeCare: 1.18, strafe: 0.38, jitter: 0.32 },
+        charId: 'crusher',
+        slot: 'CPU-BLAST',
+        scale: { attack: 1.18, defense: 1.12, speed: 1.06, size: 1.03, mass: 1.14 },
+        ai: { aggression: 1.12, edgeCare: 1.14, strafe: 0.42, jitter: 0.3 },
       },
     ],
   },
   {
     id: 'stage5',
-    title: 'Glacier Boss',
-    stageId: 'glacier',
+    title: 'Wind Twins',
+    stageId: 'storm',
     enemies: [
       {
-        charId: 'crusher',
-        slot: 'CPU-TITAN',
-        scale: { attack: 1.24, defense: 1.2, speed: 1.08, size: 1.06, mass: 1.22 },
-        ai: { aggression: 1.22, edgeCare: 1.14, strafe: 0.42, jitter: 0.25 },
+        charId: 'swift',
+        slot: 'CPU-GUST',
+        scale: { attack: 1.17, defense: 1.1, speed: 1.16, size: 0.98, mass: 1.0 },
+        ai: { aggression: 1.14, edgeCare: 1.1, strafe: 0.62, jitter: 0.48 },
+      },
+      {
+        charId: 'balance',
+        slot: 'CPU-DRIFT',
+        scale: { attack: 1.18, defense: 1.14, speed: 1.12, size: 1.02, mass: 1.1 },
+        ai: { aggression: 1.12, edgeCare: 1.15, strafe: 0.44, jitter: 0.38 },
       },
     ],
   },
   {
     id: 'stage6',
-    title: 'Magma Overdrive',
-    stageId: 'magma',
+    title: 'Gravity Duel',
+    stageId: 'gravity',
     enemies: [
       {
         charId: 'blaze',
-        slot: 'CPU-OMEGA',
-        scale: { attack: 1.3, defense: 1.24, speed: 1.16, size: 1.02, mass: 1.18 },
-        ai: { aggression: 1.28, edgeCare: 1.2, strafe: 0.58, jitter: 0.38 },
+        slot: 'CPU-CORE',
+        scale: { attack: 1.28, defense: 1.2, speed: 1.18, size: 1.02, mass: 1.17 },
+        ai: { aggression: 1.24, edgeCare: 1.18, strafe: 0.56, jitter: 0.36 },
       },
     ],
   },
   {
     id: 'stage7',
-    title: 'Final Duo',
-    stageId: 'neon',
+    title: 'Collapse Finale',
+    stageId: 'collapse',
     enemies: [
       {
         charId: 'fort',
         slot: 'CPU-GUARD',
-        scale: { attack: 1.26, defense: 1.35, speed: 1.12, size: 1.08, mass: 1.3 },
-        ai: { aggression: 1.2, edgeCare: 1.26, strafe: 0.38, jitter: 0.2 },
+        scale: { attack: 1.28, defense: 1.34, speed: 1.12, size: 1.08, mass: 1.28 },
+        ai: { aggression: 1.2, edgeCare: 1.24, strafe: 0.4, jitter: 0.22 },
       },
       {
         charId: 'blaze',
         slot: 'CPU-FLARE',
-        scale: { attack: 1.34, defense: 1.2, speed: 1.2, size: 1.0, mass: 1.15 },
-        ai: { aggression: 1.35, edgeCare: 1.15, strafe: 0.7, jitter: 0.44 },
+        scale: { attack: 1.36, defense: 1.2, speed: 1.22, size: 1.0, mass: 1.16 },
+        ai: { aggression: 1.34, edgeCare: 1.15, strafe: 0.68, jitter: 0.44 },
       },
     ],
   },
@@ -450,6 +504,68 @@ function clamp(value, min, max) {
 
 function randomRange(min, max) {
   return min + Math.random() * (max - min);
+}
+
+function getArenaRadius() {
+  return state.arenaRadiusCurrent || state.stage?.arenaRadius || 360;
+}
+
+function createStageFx() {
+  const stageId = state.stageId;
+
+  if (stageId === 'neon') {
+    return {
+      pulseTimer: randomRange(5.8, 7.2),
+      pulseWarning: 0,
+      pulseWaveActive: false,
+      pulseWaveRadius: 0,
+      pulseFlash: 0,
+      pulseHitIds: [],
+    };
+  }
+
+  if (stageId === 'glacier') {
+    return {
+      breakCharge: 0,
+      iceZone: null,
+    };
+  }
+
+  if (stageId === 'magma') {
+    return {
+      ventTimer: randomRange(2.2, 3.8),
+      vents: [],
+    };
+  }
+
+  if (stageId === 'storm') {
+    const angle = randomRange(0, Math.PI * 2);
+    return {
+      windTimer: randomRange(3.8, 5.4),
+      windAngle: angle,
+      windX: Math.cos(angle),
+      windY: Math.sin(angle),
+      windStrength: randomRange(76, 108),
+      windPulse: 0,
+    };
+  }
+
+  if (stageId === 'gravity') {
+    return {
+      gravityTimer: randomRange(4.4, 5.8),
+      gravityMode: 'in',
+      gravityPulse: 0,
+    };
+  }
+
+  if (stageId === 'collapse') {
+    return {
+      collapseWarned: false,
+      collapseRatio: 1,
+    };
+  }
+
+  return {};
 }
 
 function sanitizeInput(input) {
@@ -558,6 +674,8 @@ const state = {
   countdownTimer: 0,
   stageId: 'classic',
   stage: STAGE_BY_ID.get('classic'),
+  arenaRadiusCurrent: STAGE_BY_ID.get('classic').arenaRadius,
+  stageFx: {},
   ringPulse: 0,
   status: 'Tapでバトル開始',
   scoreLeft: 0,
@@ -594,6 +712,8 @@ const state = {
     },
   },
 };
+
+state.stageFx = createStageFx();
 
 const audio = {
   ctx: null,
@@ -1155,6 +1275,8 @@ function applyStage(stageId) {
   const next = STAGE_BY_ID.get(stageId) || STAGE_BY_ID.get('classic');
   state.stageId = next.id;
   state.stage = next;
+  state.arenaRadiusCurrent = next.arenaRadius;
+  state.stageFx = createStageFx();
   state.itemTimer = randomRange(next.itemSpawnMin, next.itemSpawnMax);
   state.itemWarning = null;
   audio.bgmStep = 0;
@@ -1977,7 +2099,8 @@ function placeBattleRoyale(players) {
   const total = players.length;
   if (total === 0) return;
 
-  const ring = clamp(state.stage.arenaRadius * 0.56, 140, state.stage.arenaRadius - 116);
+  const arenaRadius = getArenaRadius();
+  const ring = clamp(arenaRadius * 0.56, 140, arenaRadius - 116);
   const angleOffset = -Math.PI * 0.5;
 
   players.forEach((player, index) => {
@@ -1996,6 +2119,8 @@ function placeBattleRoyale(players) {
 
 function resetRound() {
   configureLineupForMode();
+  state.arenaRadiusCurrent = state.stage.arenaRadius;
+  state.stageFx = createStageFx();
 
   state.battleRoyale = shouldUseBattleRoyale();
 
@@ -2345,7 +2470,8 @@ function getNpcInput(player, dt) {
   const centerNX = toCenterX / distToCenter;
   const centerNY = toCenterY / distToCenter;
 
-  const edgeRisk = clamp((distToCenter - state.stage.arenaRadius * 0.66) / (state.stage.arenaRadius * 0.34), 0, 1);
+  const arenaRadius = getArenaRadius();
+  const edgeRisk = clamp((distToCenter - arenaRadius * 0.66) / (arenaRadius * 0.34), 0, 1);
 
   const strafe = player.ai.strafe;
   const strafeDir = (Math.sin((performance.now() * 0.0014) + player.id.length) > 0 ? 1 : -1) * strafe;
@@ -2438,7 +2564,18 @@ function applyMovement(player, input, dt, target) {
     }
   }
 
-  const damp = Math.pow(state.stage.drag, dt * 60);
+  let stageDrag = state.stage.drag;
+  if (state.stageId === 'glacier') {
+    const zone = state.stageFx?.iceZone;
+    if (zone) {
+      const distZone = Math.hypot(player.x - zone.x, player.y - zone.y);
+      if (distZone <= zone.radius + player.radius * 0.22) {
+        stageDrag = Math.max(stageDrag, 0.991);
+      }
+    }
+  }
+
+  const damp = Math.pow(stageDrag, dt * 60);
   player.vx *= damp;
   player.vy *= damp;
 
@@ -2532,6 +2669,24 @@ function resolvePlayerCollision(a, b) {
   b.vx += nx * bonusA;
   b.vy += ny * bonusA;
 
+  if (state.stageId === 'glacier') {
+    const fx = state.stageFx || {};
+    fx.breakCharge = (fx.breakCharge || 0) + impactSpeed / 320;
+    if (!fx.iceZone && fx.breakCharge >= 1) {
+      fx.breakCharge = 0;
+      fx.iceZone = {
+        x: (a.x + b.x) * 0.5,
+        y: (a.y + b.y) * 0.5,
+        radius: 152,
+        life: 2.2,
+        maxLife: 2.2,
+      };
+      state.stageFx = fx;
+      setStatus('氷床が割れてスリップゾーン発生!');
+      playSfx('spawnWarn');
+    }
+  }
+
   spawnCollisionSparks((a.x + b.x) * 0.5, (a.y + b.y) * 0.5);
 
   const now = performance.now();
@@ -2617,7 +2772,7 @@ function triggerBotConsumable(player, dt) {
 
   if (type === 'bomb') {
     const closeEnough = dist <= 168;
-    const dangerZone = Math.hypot(player.x - center.x, player.y - center.y) > state.stage.arenaRadius * 0.72;
+    const dangerZone = Math.hypot(player.x - center.x, player.y - center.y) > getArenaRadius() * 0.72;
     if (!closeEnough && !dangerZone) return;
     const chance = clamp(0.22 + aggression * 0.2 + (closeEnough ? 0.24 : 0) + (dangerZone ? 0.12 : 0), 0.2, 0.84);
     if (Math.random() <= chance) {
@@ -2668,7 +2823,7 @@ function useSelectedConsumable(player) {
 function createRandomItemSpec() {
   const type = ITEM_KEYS[Math.floor(Math.random() * ITEM_KEYS.length)];
   const angle = Math.random() * Math.PI * 2;
-  const distance = randomRange(0, state.stage.arenaRadius - 110);
+  const distance = randomRange(0, getArenaRadius() - 110);
   return {
     type,
     x: center.x + Math.cos(angle) * distance,
@@ -2885,7 +3040,7 @@ function updateBullets(dt) {
     bullet.y += bullet.vy * dt;
 
     const outDist = Math.hypot(bullet.x - center.x, bullet.y - center.y);
-    if (bullet.life <= 0 || outDist > state.stage.arenaRadius + 130) {
+    if (bullet.life <= 0 || outDist > getArenaRadius() + 130) {
       state.bullets.splice(i, 1);
       continue;
     }
@@ -2981,6 +3136,273 @@ function updateBombs(dt) {
   }
 }
 
+function updateNeonGimmick(dt) {
+  const fx = state.stageFx || {};
+  const arenaRadius = getArenaRadius();
+
+  if (fx.pulseWarning > 0) {
+    fx.pulseWarning = Math.max(0, fx.pulseWarning - dt);
+    if (fx.pulseWarning <= 0) {
+      fx.pulseWaveActive = true;
+      fx.pulseWaveRadius = 0;
+      fx.pulseHitIds = [];
+      playSfx('ringout');
+      addImpactRings(center.x, center.y, 'rgba(186, 255, 238, 0.8)', 1.2);
+    }
+    state.stageFx = fx;
+    return;
+  }
+
+  if (fx.pulseWaveActive) {
+    const prevRadius = fx.pulseWaveRadius;
+    fx.pulseWaveRadius += dt * 780;
+    const hitBand = 30;
+
+    state.activePlayers.forEach((player) => {
+      if (fx.pulseHitIds.includes(player.id)) return;
+      const dx = player.x - center.x;
+      const dy = player.y - center.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (dist < prevRadius - hitBand || dist > fx.pulseWaveRadius + hitBand) return;
+
+      const nx = dx / dist;
+      const ny = dy / dist;
+      const defenseScale = Math.max(0.94, 0.9 + player.defenseMul * 0.09);
+      const knock = (460 * (1 + clamp((arenaRadius - dist) / arenaRadius, 0, 0.5))) / defenseScale;
+      player.vx += nx * knock;
+      player.vy += ny * knock;
+      fx.pulseHitIds.push(player.id);
+      spawnImpactFx(player.x, player.y, '#8ff8e8', 1.18);
+      playSfx('hit');
+    });
+
+    if (fx.pulseWaveRadius > arenaRadius + 170) {
+      fx.pulseWaveActive = false;
+      fx.pulseWaveRadius = 0;
+      fx.pulseTimer = randomRange(5.6, 7.4);
+      fx.pulseFlash = 0.22;
+    }
+
+    fx.pulseFlash = Math.max(0, (fx.pulseFlash || 0) - dt);
+    state.stageFx = fx;
+    return;
+  }
+
+  fx.pulseTimer = (fx.pulseTimer || randomRange(5.8, 7.2)) - dt;
+  if (fx.pulseTimer <= 0) {
+    fx.pulseTimer = 0;
+    fx.pulseWarning = 1.0;
+    setStatus('Shock Pulse incoming!');
+    playSfx('spawnWarn');
+  }
+  fx.pulseFlash = Math.max(0, (fx.pulseFlash || 0) - dt);
+  state.stageFx = fx;
+}
+
+function updateGlacierGimmick(dt) {
+  const fx = state.stageFx || {};
+  if (fx.iceZone) {
+    fx.iceZone.life -= dt;
+    if (fx.iceZone.life <= 0) {
+      fx.iceZone = null;
+    }
+  }
+  fx.breakCharge = Math.max(0, (fx.breakCharge || 0) - dt * 0.12);
+  state.stageFx = fx;
+}
+
+function updateMagmaGimmick(dt) {
+  const fx = state.stageFx || {};
+  const arenaRadius = getArenaRadius();
+  fx.ventTimer = (fx.ventTimer || randomRange(2.2, 3.8)) - dt;
+  if (fx.ventTimer <= 0) {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = randomRange(0, arenaRadius - 120);
+    fx.vents = fx.vents || [];
+    fx.vents.push({
+      x: center.x + Math.cos(angle) * distance,
+      y: center.y + Math.sin(angle) * distance,
+      radius: 84,
+      warn: 1.0,
+      burstLife: 0.32,
+      bursted: false,
+    });
+    fx.ventTimer = randomRange(2.3, 3.9);
+  }
+
+  if (Array.isArray(fx.vents)) {
+    for (let i = fx.vents.length - 1; i >= 0; i -= 1) {
+      const vent = fx.vents[i];
+      if (!vent.bursted) {
+        vent.warn -= dt;
+        if (vent.warn <= 0) {
+          vent.bursted = true;
+          let hitCount = 0;
+          state.activePlayers.forEach((player) => {
+            const dx = player.x - vent.x;
+            const dy = player.y - vent.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist > vent.radius + player.radius) return;
+            const len = dist || 1;
+            const nx = dx / len;
+            const ny = dy / len;
+            const falloff = 1 - clamp((dist - player.radius) / vent.radius, 0, 1);
+            const defenseScale = Math.max(0.94, 0.9 + player.defenseMul * 0.08);
+            const knock = (760 * (0.45 + falloff * 1.05)) / defenseScale;
+            player.vx += nx * knock;
+            player.vy += ny * knock;
+            hitCount += 1;
+            spawnImpactFx(player.x, player.y, '#ffb37a', 1.35);
+          });
+
+          spawnImpactFx(vent.x, vent.y, '#ff915e', 1.48);
+          playSfx('bombBlast');
+          if (hitCount > 0) {
+            setStatus(`Vent Burst! ${hitCount}人ヒット`);
+          }
+        }
+      } else {
+        vent.burstLife -= dt;
+        if (vent.burstLife <= 0) {
+          fx.vents.splice(i, 1);
+        }
+      }
+    }
+  }
+
+  state.stageFx = fx;
+}
+
+function updateStormGimmick(dt) {
+  const fx = state.stageFx || {};
+  fx.windPulse = (fx.windPulse || 0) + dt;
+  fx.windTimer = (fx.windTimer || randomRange(3.8, 5.4)) - dt;
+
+  if (fx.windTimer <= 0) {
+    fx.windAngle = randomRange(0, Math.PI * 2);
+    fx.windX = Math.cos(fx.windAngle);
+    fx.windY = Math.sin(fx.windAngle);
+    fx.windStrength = randomRange(76, 108);
+    fx.windTimer = randomRange(3.8, 5.4);
+    setStatus('Wind Shift!');
+    playSfx('spawnWarn');
+  }
+
+  const windStrength = fx.windStrength || 86;
+  state.activePlayers.forEach((player) => {
+    player.vx += (fx.windX || 0) * windStrength * dt;
+    player.vy += (fx.windY || 0) * windStrength * dt;
+  });
+
+  state.bullets.forEach((bullet) => {
+    bullet.vx += (fx.windX || 0) * windStrength * 0.28 * dt;
+    bullet.vy += (fx.windY || 0) * windStrength * 0.28 * dt;
+  });
+
+  state.stageFx = fx;
+}
+
+function updateGravityGimmick(dt) {
+  const fx = state.stageFx || {};
+  fx.gravityPulse = (fx.gravityPulse || 0) + dt;
+  fx.gravityTimer = (fx.gravityTimer || randomRange(4.4, 5.8)) - dt;
+
+  if (fx.gravityTimer <= 0) {
+    fx.gravityMode = fx.gravityMode === 'in' ? 'out' : 'in';
+    fx.gravityTimer = randomRange(4.4, 5.8);
+    setStatus(fx.gravityMode === 'in' ? 'Gravity Pull!' : 'Gravity Push!');
+    playSfx('spawnWarn');
+  }
+
+  const arenaRadius = getArenaRadius();
+  const scalar = fx.gravityMode === 'in' ? 170 : -138;
+
+  state.activePlayers.forEach((player) => {
+    const dx = center.x - player.x;
+    const dy = center.y - player.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const force = scalar * clamp(0.45 + (dist / arenaRadius) * 0.8, 0.45, 1.3);
+    player.vx += nx * force * dt;
+    player.vy += ny * force * dt;
+  });
+
+  state.bullets.forEach((bullet) => {
+    const dx = center.x - bullet.x;
+    const dy = center.y - bullet.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const force = scalar * 0.36;
+    bullet.vx += nx * force * dt;
+    bullet.vy += ny * force * dt;
+  });
+
+  state.stageFx = fx;
+}
+
+function updateCollapseGimmick() {
+  const fx = state.stageFx || {};
+  const baseRadius = state.stage.arenaRadius;
+  if (state.timer > 20) {
+    state.arenaRadiusCurrent = baseRadius;
+    fx.collapseRatio = 1;
+    state.stageFx = fx;
+    return;
+  }
+
+  const t = clamp((20 - state.timer) / 20, 0, 1);
+  const ratio = 1 - t * 0.24;
+  state.arenaRadiusCurrent = baseRadius * ratio;
+  fx.collapseRatio = ratio;
+
+  if (!fx.collapseWarned && state.timer <= 20) {
+    fx.collapseWarned = true;
+    setStatus('Ring Collapse! 外周が狭まる');
+    playSfx('spawnWarn');
+  }
+
+  state.stageFx = fx;
+}
+
+function updateStageGimmicks(dt) {
+  if (!state.stageFx) {
+    state.stageFx = createStageFx();
+  }
+
+  if (state.stageId !== 'collapse') {
+    state.arenaRadiusCurrent = state.stage.arenaRadius;
+  }
+
+  if (state.stageId === 'neon') {
+    updateNeonGimmick(dt);
+    return;
+  }
+  if (state.stageId === 'glacier') {
+    updateGlacierGimmick(dt);
+    return;
+  }
+  if (state.stageId === 'magma') {
+    updateMagmaGimmick(dt);
+    return;
+  }
+  if (state.stageId === 'storm') {
+    updateStormGimmick(dt);
+    return;
+  }
+  if (state.stageId === 'gravity') {
+    updateGravityGimmick(dt);
+    return;
+  }
+  if (state.stageId === 'collapse') {
+    updateCollapseGimmick();
+    return;
+  }
+
+  state.stageFx = state.stageFx || {};
+}
+
 function updateBuffTimers(player, dt) {
   Object.keys(player.buffs).forEach((key) => {
     player.buffs[key] = Math.max(0, player.buffs[key] - dt);
@@ -3001,7 +3423,7 @@ function teamAliveCount(team) {
 function checkRingOut() {
   const outPlayers = state.activePlayers.filter((player) => {
     const dist = Math.hypot(player.x - center.x, player.y - center.y);
-    return dist > state.stage.arenaRadius + player.radius * 0.2;
+    return dist > getArenaRadius() + player.radius * 0.2;
   });
 
   if (outPlayers.length === 0) return;
@@ -3169,6 +3591,8 @@ function createSnapshot() {
     round: state.round,
     timer: state.timer,
     countdownTimer: state.countdownTimer,
+    arenaRadiusCurrent: state.arenaRadiusCurrent,
+    stageFx: state.stageFx ? JSON.parse(JSON.stringify(state.stageFx)) : null,
     status: state.status,
     scoreLeft: state.scoreLeft,
     scoreRight: state.scoreRight,
@@ -3270,6 +3694,10 @@ function applySnapshot(snapshot) {
   state.round = Number(snapshot.round) || state.round;
   state.timer = Number(snapshot.timer) || 0;
   state.countdownTimer = Math.max(0, Number(snapshot.countdownTimer) || 0);
+  state.arenaRadiusCurrent = Number(snapshot.arenaRadiusCurrent) || state.stage.arenaRadius;
+  state.stageFx = snapshot.stageFx
+    ? JSON.parse(JSON.stringify(snapshot.stageFx))
+    : createStageFx();
   state.status = snapshot.status || state.status;
   state.scoreLeft = Number(snapshot.scoreLeft) || 0;
   state.scoreRight = Number(snapshot.scoreRight) || 0;
@@ -3364,6 +3792,8 @@ function stepPlaying(dt) {
     }
   }
 
+  updateStageGimmicks(dt);
+
   state.activePlayers.forEach((player) => {
     updateBuffTimers(player, dt);
   });
@@ -3427,6 +3857,7 @@ function update(dt) {
 }
 
 function drawBackground() {
+  const arenaRadius = getArenaRadius();
   const grad = ctx.createLinearGradient(0, 0, 0, CONFIG.height);
   grad.addColorStop(0, state.stage.bgTop);
   grad.addColorStop(1, state.stage.bgBottom);
@@ -3435,23 +3866,23 @@ function drawBackground() {
 
   const pulse = 0.12 + (Math.sin(state.ringPulse) + 1) * 0.05;
   ctx.beginPath();
-  ctx.arc(center.x, center.y, state.stage.arenaRadius + 18, 0, Math.PI * 2);
+  ctx.arc(center.x, center.y, arenaRadius + 18, 0, Math.PI * 2);
   ctx.fillStyle = state.stage.glowColor.replace('%A%', String(pulse));
   ctx.fill();
 
   const ring = ctx.createRadialGradient(
     center.x,
     center.y,
-    state.stage.arenaRadius * 0.2,
+    arenaRadius * 0.2,
     center.x,
     center.y,
-    state.stage.arenaRadius,
+    arenaRadius,
   );
   ring.addColorStop(0, 'rgba(30, 45, 56, 0.92)');
   ring.addColorStop(1, 'rgba(8, 14, 20, 0.98)');
 
   ctx.beginPath();
-  ctx.arc(center.x, center.y, state.stage.arenaRadius, 0, Math.PI * 2);
+  ctx.arc(center.x, center.y, arenaRadius, 0, Math.PI * 2);
   ctx.fillStyle = ring;
   ctx.fill();
 
@@ -3463,7 +3894,124 @@ function drawBackground() {
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.17)';
   for (let i = 1; i <= 3; i += 1) {
     ctx.beginPath();
-    ctx.arc(center.x, center.y, state.stage.arenaRadius * (i / 4), 0, Math.PI * 2);
+    ctx.arc(center.x, center.y, arenaRadius * (i / 4), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function drawStageGimmicks() {
+  const fx = state.stageFx || {};
+  const arenaRadius = getArenaRadius();
+
+  if (state.stageId === 'neon') {
+    if (fx.pulseWarning > 0) {
+      const pulse = 0.45 + Math.sin((1 - fx.pulseWarning) * 18) * 0.25;
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, arenaRadius * (0.26 + (1 - fx.pulseWarning) * 0.12), 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(181, 255, 233, ${0.4 + pulse * 0.35})`;
+      ctx.lineWidth = 5;
+      ctx.stroke();
+    }
+    if (fx.pulseWaveActive) {
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, fx.pulseWaveRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(189, 255, 242, 0.85)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+    }
+    if (fx.pulseFlash > 0) {
+      ctx.fillStyle = `rgba(196, 255, 241, ${fx.pulseFlash * 0.35})`;
+      ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
+    }
+    return;
+  }
+
+  if (state.stageId === 'glacier') {
+    const zone = fx.iceZone;
+    if (!zone) return;
+    const alpha = clamp(zone.life / Math.max(0.001, zone.maxLife || 1), 0, 1);
+    ctx.beginPath();
+    ctx.arc(zone.x, zone.y, zone.radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(150, 221, 255, ${0.12 + alpha * 0.16})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(185, 235, 255, ${0.26 + alpha * 0.34})`;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    return;
+  }
+
+  if (state.stageId === 'magma') {
+    const vents = Array.isArray(fx.vents) ? fx.vents : [];
+    vents.forEach((vent) => {
+      if (!vent.bursted) {
+        const pulse = 0.5 + Math.sin((1 - vent.warn) * 16) * 0.35;
+        ctx.beginPath();
+        ctx.arc(vent.x, vent.y, vent.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 170, 120, ${0.28 + pulse * 0.35})`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(vent.x, vent.y, 12 + (1 - vent.warn) * 6, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 112, 84, ${0.35 + pulse * 0.4})`;
+        ctx.fill();
+      } else {
+        const flash = clamp(vent.burstLife / 0.32, 0, 1);
+        ctx.beginPath();
+        ctx.arc(vent.x, vent.y, vent.radius * (1.15 - flash * 0.35), 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 193, 144, ${flash * 0.86})`;
+        ctx.lineWidth = 6 * flash;
+        ctx.stroke();
+      }
+    });
+    return;
+  }
+
+  if (state.stageId === 'storm') {
+    const windX = fx.windX || 0;
+    const windY = fx.windY || 0;
+    const len = Math.hypot(windX, windY) || 1;
+    const nx = windX / len;
+    const ny = windY / len;
+    const perpX = -ny;
+    const perpY = nx;
+    const pulse = fx.windPulse || 0;
+
+    for (let i = -2; i <= 2; i += 1) {
+      const shift = ((pulse * 90 + i * 120) % 640) - 320;
+      const x = center.x + perpX * shift;
+      const y = center.y + perpY * shift;
+      const ex = x + nx * 170;
+      const ey = y + ny * 170;
+      ctx.strokeStyle = 'rgba(173, 230, 255, 0.32)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+    }
+    return;
+  }
+
+  if (state.stageId === 'gravity') {
+    const inward = fx.gravityMode !== 'out';
+    const pulse = 0.55 + Math.sin((fx.gravityPulse || 0) * 5.2) * 0.2;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, arenaRadius * 0.24, 0, Math.PI * 2);
+    ctx.strokeStyle = inward
+      ? `rgba(210, 181, 255, ${0.44 + pulse * 0.3})`
+      : `rgba(255, 170, 214, ${0.44 + pulse * 0.3})`;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    return;
+  }
+
+  if (state.stageId === 'collapse') {
+    const baseRadius = state.stage.arenaRadius;
+    if (arenaRadius >= baseRadius - 1) return;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, arenaRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255, 165, 165, 0.88)';
+    ctx.lineWidth = 6;
     ctx.stroke();
   }
 }
@@ -3841,6 +4389,7 @@ function render() {
     ctx.translate(ox, oy);
   }
   drawBackground();
+  drawStageGimmicks();
   drawItemWarning();
   drawItem();
   drawBombs();
@@ -4081,8 +4630,12 @@ function playTone(freq, duration, options = {}) {
 }
 
 function stageBgmNotes() {
+  if (state.stageId === 'classic') return [196, 247, 294, 330, 294, 247, 220, 196];
   if (state.stageId === 'glacier') return [220, 247, 294, 330, 294, 247, 220, 196];
   if (state.stageId === 'magma') return [196, 247, 294, 330, 294, 247, 220, 165];
+  if (state.stageId === 'storm') return [233, 277, 311, 370, 311, 277, 247, 208];
+  if (state.stageId === 'gravity') return [185, 220, 277, 330, 277, 220, 196, 165];
+  if (state.stageId === 'collapse') return [247, 311, 370, 415, 370, 311, 277, 220];
   return [220, 277, 330, 392, 330, 277, 247, 196];
 }
 
@@ -4782,7 +5335,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-4')
+    navigator.serviceWorker.register('sw.js?v=20260321-5')
       .then((registration) => registration.update())
       .catch(() => {});
   });
