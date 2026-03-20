@@ -23,6 +23,9 @@ const statusEl = document.getElementById('statusText');
 const setScoreTextEl = document.getElementById('setScoreText');
 
 const stageCardsEl = document.getElementById('stageCards');
+const stagePreviewEl = document.getElementById('stagePreview');
+const stagePreviewNameEl = document.getElementById('stagePreviewName');
+const stagePreviewGimmickEl = document.getElementById('stagePreviewGimmick');
 const p1CharCardsEl = document.getElementById('p1CharCards');
 const p2CharCardsEl = document.getElementById('p2CharCards');
 
@@ -64,6 +67,7 @@ const setupNextBtn = document.getElementById('setupNextBtn');
 
 const startBtn = document.getElementById('startBtn');
 const resetBtn = document.getElementById('resetBtn');
+const titleBtn = document.getElementById('titleBtn');
 const setupToggleBtn = document.getElementById('setupToggleBtn');
 const focusBtn = document.getElementById('focusBtn');
 const controlHintEl = document.getElementById('controlHint');
@@ -185,7 +189,8 @@ const STAGES = [
   {
     id: 'classic',
     name: 'Classic Arena',
-    desc: 'ギミックなし。基準になる標準ステージ',
+    desc: 'ギミックなし。純粋な操作と読み合い',
+    gimmick: 'なし（基準ステージ）',
     arenaRadius: 390,
     drag: 0.966,
     impactScale: 1,
@@ -202,7 +207,8 @@ const STAGES = [
   {
     id: 'neon',
     name: 'Neon Dome',
-    desc: '標準バランスの円形ステージ',
+    desc: '照明パルスで視覚ノイズ。標準バランス',
+    gimmick: 'ネオン脈動（視覚演出）',
     arenaRadius: 382,
     drag: 0.966,
     impactScale: 1,
@@ -219,7 +225,8 @@ const STAGES = [
   {
     id: 'glacier',
     name: 'Glacier Ring',
-    desc: '滑りやすく高速。制御が難しい',
+    desc: '滑走しやすく慣性が残る。高速展開',
+    gimmick: '低摩擦スリップ',
     arenaRadius: 368,
     drag: 0.984,
     impactScale: 1.06,
@@ -236,7 +243,8 @@ const STAGES = [
   {
     id: 'magma',
     name: 'Magma Pit',
-    desc: '重い手触り。弾き飛ばしが強い',
+    desc: '重い挙動と高い衝撃力で一撃が重い',
+    gimmick: '高インパクト衝突',
     arenaRadius: 398,
     drag: 0.948,
     impactScale: 1.15,
@@ -614,6 +622,7 @@ const flowState = {
   setupContext: 'single_story',
   setupSteps: [],
   setupIndex: 0,
+  singleChoiceOpen: false,
 };
 
 function keepViewportTop() {
@@ -714,8 +723,13 @@ function setFlowScene(scene) {
     audio.bgmStep = 0;
     if (onlineControlsEl) onlineControlsEl.classList.add('is-hidden');
     if (isSingleMode()) {
-      setModeStatus('SINGLE: STORY / FREE BATTLE を選択');
-      setCampaignInfoText();
+      if (flowState.singleChoiceOpen) {
+        setModeStatus('SINGLE: STORY / FREE BATTLE を選択');
+        setCampaignInfoText();
+      } else {
+        setModeStatus('モードを選択してください');
+        campaignInfoEl.textContent = 'SINGLEを押すと STORY / FREE を選択';
+      }
     } else {
       setModeStatus('モードを選択してください');
       campaignInfoEl.textContent = 'SPIN SMASH';
@@ -869,17 +883,20 @@ function beginModeFlow(mode) {
   switchMode(mode);
 
   if (mode === PLAY_MODES.online) {
+    flowState.singleChoiceOpen = false;
     setFlowScene(FLOW_SCENES.onlineLobby);
     return;
   }
 
   if (mode === PLAY_MODES.single) {
+    flowState.singleChoiceOpen = true;
     setFlowScene(FLOW_SCENES.title);
     setModeStatus('SINGLE: STORY / FREE BATTLE を選択');
     setCampaignInfoText();
     return;
   }
 
+  flowState.singleChoiceOpen = false;
   beginSetupFlow('local');
 }
 
@@ -1033,6 +1050,18 @@ function getSecondaryControlRole() {
     return getOnlineOwnRole();
   }
   return 'p2';
+}
+
+function getPrimaryControlRole() {
+  if (isOnlineMode() && online.enabled && !online.isHost) {
+    return getOnlineOwnRole();
+  }
+  return 'p1';
+}
+
+function isUserControlledPlayer(player) {
+  if (!player) return false;
+  return player.id === getPrimaryControlRole();
 }
 
 function getSelectionRoleByIndex(index) {
@@ -1233,12 +1262,26 @@ function renderStageCards() {
     card.innerHTML = `
       <p class="stage-name">${stage.name}</p>
       <div class="stage-mini ${stage.miniClass}"></div>
-      <p class="stage-desc">${stage.desc}</p>
+      <p class="stage-desc">GIMMICK: ${stage.gimmick || stage.desc}</p>
     `;
 
     card.addEventListener('click', () => selectStage(stage.id, true));
     stageCardsEl.appendChild(card);
   });
+}
+
+function updateStagePreview() {
+  if (!stagePreviewEl) return;
+  const stage = STAGE_BY_ID.get(state.stageId) || state.stage;
+  if (!stage) return;
+
+  stagePreviewEl.className = `stage-preview stage-preview--${stage.id}`;
+  if (stagePreviewNameEl) {
+    stagePreviewNameEl.textContent = stage.name;
+  }
+  if (stagePreviewGimmickEl) {
+    stagePreviewGimmickEl.textContent = `ギミック: ${stage.gimmick || stage.desc}`;
+  }
 }
 
 function renderCharacterCards(container, playerIndex) {
@@ -1323,7 +1366,7 @@ function refreshSelectionUi() {
   if (singleStoryBtn) singleStoryBtn.classList.toggle('is-active', isSingleStoryMode());
   if (singleFreeBtn) singleFreeBtn.classList.toggle('is-active', isSingleFreeMode());
 
-  const showSingleChoice = isSingleMode() && flowState.scene === FLOW_SCENES.title;
+  const showSingleChoice = isSingleMode() && flowState.scene === FLOW_SCENES.title && flowState.singleChoiceOpen;
   if (singleModeChoiceEl) singleModeChoiceEl.classList.toggle('is-hidden', !showSingleChoice);
 
   const showOnlineControls = isOnlineMode() && flowState.scene === FLOW_SCENES.onlineLobby;
@@ -1384,6 +1427,7 @@ function refreshSelectionUi() {
       : `ENEMY ${state.single.free.activeSlot + 1} のキャラクターを選択`;
   }
 
+  updateStagePreview();
   syncNamePlates();
 }
 
@@ -1417,9 +1461,23 @@ function leaveOnlineFromUi(statusText = 'オンラインから退出しました
   if (!isOnlineMode()) return;
   leaveOnlineRoom();
   setModeStatus(statusText);
+  flowState.singleChoiceOpen = false;
   resetMatch(true);
   refreshSelectionUi();
   updateControlUi();
+  resetStick(touchState.p1, knobP1);
+  resetStick(touchState.p2, knobP2);
+  setFlowScene(FLOW_SCENES.title);
+}
+
+function returnToTitleFromBattle() {
+  if (isOnlineMode() && online.enabled) {
+    leaveOnlineFromUi('タイトルへ戻りました');
+    return;
+  }
+
+  flowState.singleChoiceOpen = false;
+  resetMatch(true);
   resetStick(touchState.p1, knobP1);
   resetStick(touchState.p2, knobP2);
   setFlowScene(FLOW_SCENES.title);
@@ -1662,6 +1720,7 @@ function resetToTitleHome() {
   if (state.phase !== 'idle') {
     resetMatch(true);
   }
+  flowState.singleChoiceOpen = false;
   setFocusMode(false);
   setFlowScene(FLOW_SCENES.title);
   keepViewportTop();
@@ -3526,6 +3585,8 @@ function drawBombs() {
 function drawTop(player) {
   const power = getBuffAmount(player, 'power');
   const frozen = player.freezeTimer > 0;
+  const isYou = isUserControlledPlayer(player);
+  const youPulse = 0.58 + Math.sin(performance.now() * 0.012) * 0.22;
 
   ctx.save();
   ctx.translate(player.x, player.y);
@@ -3547,6 +3608,20 @@ function drawTop(player) {
     ctx.stroke();
   }
 
+  if (isYou) {
+    ctx.beginPath();
+    ctx.arc(0, 0, player.radius + 18, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255, 238, 160, ${0.76 + youPulse * 0.22})`;
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, player.radius + 11, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(22, 32, 42, 0.64)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
   ctx.beginPath();
   ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
   ctx.fillStyle = player.color;
@@ -3564,10 +3639,22 @@ function drawTop(player) {
   }
 
   ctx.rotate(-player.spinAngle);
-  ctx.fillStyle = '#f6fbfa';
-  ctx.font = "bold 14px 'Chakra Petch', sans-serif";
+  ctx.fillStyle = isYou ? '#fffad2' : '#f6fbfa';
+  ctx.font = isYou ? "bold 16px 'Chakra Petch', sans-serif" : "bold 14px 'Chakra Petch', sans-serif";
   ctx.textAlign = 'center';
   ctx.fillText(player.slot, 0, 4);
+
+  if (isYou) {
+    const badgeY = -player.radius - 19;
+    ctx.fillStyle = 'rgba(4, 12, 18, 0.78)';
+    ctx.fillRect(-27, badgeY - 10, 54, 18);
+    ctx.strokeStyle = 'rgba(255, 244, 177, 0.92)';
+    ctx.lineWidth = 1.4;
+    ctx.strokeRect(-27, badgeY - 10, 54, 18);
+    ctx.fillStyle = '#fff6bf';
+    ctx.font = "bold 11px 'Chakra Petch', sans-serif";
+    ctx.fillText('YOU', 0, badgeY + 2);
+  }
 
   if (power || player.buffs.fire > 0 || player.buffs.ice > 0) {
     ctx.beginPath();
@@ -4427,6 +4514,7 @@ function bindUi() {
       if (!isSingleMode()) {
         switchMode(PLAY_MODES.single);
       }
+      flowState.singleChoiceOpen = false;
       setSingleVariant(SINGLE_VARIANTS.story, true);
       beginSingleSetupFlow();
     });
@@ -4437,6 +4525,7 @@ function bindUi() {
       if (!isSingleMode()) {
         switchMode(PLAY_MODES.single);
       }
+      flowState.singleChoiceOpen = false;
       setSingleVariant(SINGLE_VARIANTS.free, true);
       beginSingleSetupFlow();
     });
@@ -4456,6 +4545,7 @@ function bindUi() {
       if (flowState.setupContext.startsWith('online')) {
         setFlowScene(FLOW_SCENES.onlineLobby);
       } else {
+        flowState.singleChoiceOpen = false;
         setFlowScene(FLOW_SCENES.title);
       }
     });
@@ -4575,6 +4665,14 @@ function bindUi() {
     });
   }
 
+  if (titleBtn) {
+    titleBtn.addEventListener('click', () => {
+      unlockAudio();
+      playSfx('menu');
+      returnToTitleFromBattle();
+    });
+  }
+
   resetBtn.addEventListener('click', () => {
     unlockAudio();
     if (isOnlineMode() && online.enabled && !online.isHost) return;
@@ -4684,7 +4782,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-3')
+    navigator.serviceWorker.register('sw.js?v=20260321-4')
       .then((registration) => registration.update())
       .catch(() => {});
   });

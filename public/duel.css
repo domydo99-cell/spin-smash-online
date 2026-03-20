@@ -301,6 +301,139 @@ body {
   opacity: 0.9;
 }
 
+.stage-preview {
+  margin-top: 10px;
+  padding: 9px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.stage-preview-head {
+  display: grid;
+  gap: 2px;
+}
+
+.stage-preview-name {
+  margin: 0;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.9rem;
+}
+
+.stage-preview-gimmick {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.stage-preview-arena {
+  margin-top: 8px;
+  height: 86px;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.preview-ring {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 118px;
+  height: 118px;
+  border-radius: 50%;
+  border: 2px solid rgba(230, 244, 255, 0.72);
+  transform: translate(-50%, -50%);
+}
+
+.preview-top {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  top: 50%;
+  left: 50%;
+  margin-left: -11px;
+  margin-top: -11px;
+}
+
+.preview-top--you {
+  background: #46d9bf;
+  animation: previewOrbitA 2.1s linear infinite;
+}
+
+.preview-top--enemy {
+  background: #ff9f73;
+  animation: previewOrbitB 2.1s linear infinite;
+}
+
+.preview-gimmick {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.stage-preview--classic .stage-preview-arena {
+  background: linear-gradient(135deg, #1a2433, #111824);
+}
+
+.stage-preview--neon .stage-preview-arena {
+  background: linear-gradient(135deg, #112730, #0d1721);
+}
+
+.stage-preview--neon .preview-gimmick {
+  background:
+    radial-gradient(circle at 20% 25%, rgba(95, 255, 228, 0.2), transparent 45%),
+    radial-gradient(circle at 80% 72%, rgba(255, 216, 128, 0.17), transparent 45%);
+  animation: previewPulse 1.4s ease-in-out infinite;
+}
+
+.stage-preview--glacier .stage-preview-arena {
+  background: linear-gradient(135deg, #10243b, #0c162a);
+}
+
+.stage-preview--glacier .preview-gimmick {
+  background:
+    linear-gradient(120deg, transparent 18%, rgba(176, 223, 255, 0.3) 40%, transparent 62%);
+  animation: previewSlide 1.1s linear infinite;
+}
+
+.stage-preview--magma .stage-preview-arena {
+  background: linear-gradient(135deg, #2f170f, #180c09);
+}
+
+.stage-preview--magma .preview-gimmick {
+  background:
+    radial-gradient(circle at 52% 52%, rgba(255, 180, 116, 0.22), transparent 56%),
+    radial-gradient(circle at 34% 65%, rgba(255, 120, 80, 0.2), transparent 52%);
+  animation: previewPulseStrong 1s ease-in-out infinite;
+}
+
+@keyframes previewOrbitA {
+  0% { transform: translate(-50%, -50%) rotate(0deg) translateX(42px); }
+  100% { transform: translate(-50%, -50%) rotate(360deg) translateX(42px); }
+}
+
+@keyframes previewOrbitB {
+  0% { transform: translate(-50%, -50%) rotate(180deg) translateX(42px); }
+  100% { transform: translate(-50%, -50%) rotate(540deg) translateX(42px); }
+}
+
+@keyframes previewPulse {
+  0%, 100% { opacity: 0.58; }
+  50% { opacity: 0.98; }
+}
+
+@keyframes previewSlide {
+  0% { transform: translateX(-60%); opacity: 0.24; }
+  55% { opacity: 0.58; }
+  100% { transform: translateX(68%); opacity: 0.18; }
+}
+
+@keyframes previewPulseStrong {
+  0%, 100% { opacity: 0.45; transform: scale(0.95); }
+  50% { opacity: 0.96; transform: scale(1.05); }
+}
+
 .char-card {
   min-height: 148px;
 }

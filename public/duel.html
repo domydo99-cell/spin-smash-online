@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SPIN SMASH | Online Duel</title>
-  <link rel="preload" href="duel.css?v=20260321-3" as="style" />
-  <link rel="preload" href="duel.js?v=20260321-3" as="script" />
+  <link rel="preload" href="duel.css?v=20260321-4" as="style" />
+  <link rel="preload" href="duel.js?v=20260321-4" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="duel.css?v=20260321-3" />
+  <link rel="stylesheet" href="duel.css?v=20260321-4" />
 </head>
 <body class="flow-title">
   <main class="layout">
@@ -119,6 +119,7 @@
           <div id="connectionBanner" class="connection-banner is-hidden" aria-live="polite"></div>
           <div id="netBadge" class="net-badge is-hidden" aria-live="polite">NET --</div>
           <div class="arena-corner-actions">
+            <button id="titleBtn" class="action-btn action-btn--ghost" type="button">Title</button>
             <button id="resetBtn" class="action-btn action-btn--ghost" type="button">Reset</button>
           </div>
 
@@ -170,6 +171,18 @@
         <div id="stageChoiceBlock" class="choice-block">
           <h2>STAGE SELECT</h2>
           <div id="stageCards" class="choice-grid choice-grid--stage"></div>
+          <article id="stagePreview" class="stage-preview stage-preview--classic" aria-live="polite">
+            <div class="stage-preview-head">
+              <p id="stagePreviewName" class="stage-preview-name">Classic Arena</p>
+              <p id="stagePreviewGimmick" class="stage-preview-gimmick">ギミック: なし（基準ステージ）</p>
+            </div>
+            <div class="stage-preview-arena">
+              <i class="preview-ring"></i>
+              <i class="preview-top preview-top--you"></i>
+              <i class="preview-top preview-top--enemy"></i>
+              <i class="preview-gimmick"></i>
+            </div>
+          </article>
         </div>
 
         <div id="p1ChoiceBlock" class="choice-block">
@@ -211,6 +224,6 @@
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="duel.js?v=20260321-3"></script>
+  <script src="duel.js?v=20260321-4"></script>
 </body>
 </html>
