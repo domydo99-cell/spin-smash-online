@@ -73,6 +73,17 @@ Original prompt: 説明とROUND1部分をゲーム画面の下へ移動し、FOC
   - 速度上限クランプで爆風が弱まる問題に対応: `knockbackGraceTimer / knockbackSpeedLimit` を追加し、被弾直後のみ高速度を維持。
   - オンライン同期用に上記ノックバック状態をスナップショットに含めるよう更新。
   - キャッシュ更新: `duel.*` を `20260321-9`、SWを `spin-smash-shell-v15` に更新。
+- 2026-03-21: SINGLE調整 + ENDLESS（試験）実装。
+  - STORYのSTAGE1-3を弱体化。特にSTAGE1はチュートリアル寄りになるよう敵スケール/AIを大幅に下げた。
+  - SINGLE選択に `ENDLESS` を追加（キャラ選択後に開始）。
+  - ENDLESS仕様:
+    - 制限時間なし（内部タイマーはステージギミック用に循環）
+    - YOUリングアウトで即終了
+    - 5秒ごとに敵を1体追加（最大5枠）
+    - 20体に1体、ELITE敵を生成
+    - 敵撃破10体ごとにステージ自動切替
+    - 雑魚敵は小型・低能力・低AI、かつ敵はアイテムを拾わない/使わない
+  - HUDをENDLESS対応（`∞`表示、KILLS/ALIVE表示、オーバーレイ文言調整）。
 - 2026-03-21: Start操作フローをタップ起動へ変更。
   - ゲーム画面右上の `Start` ボタンを削除（`Reset` のみ残す）。
   - キャンバス `pointerdown` で `idle -> startMatch`、SINGLE待機進行は `advanceSingleByTap()` を優先。

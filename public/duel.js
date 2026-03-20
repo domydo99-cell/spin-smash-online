@@ -36,6 +36,7 @@ const modeSingleBtn = document.getElementById('modeSingleBtn');
 const singleModeChoiceEl = document.getElementById('singleModeChoice');
 const singleStoryBtn = document.getElementById('singleStoryBtn');
 const singleFreeBtn = document.getElementById('singleFreeBtn');
+const singleEndlessBtn = document.getElementById('singleEndlessBtn');
 
 const onlineControlsEl = document.getElementById('onlineControls');
 const playerNameInputEl = document.getElementById('playerNameInput');
@@ -113,9 +114,15 @@ const PLAY_MODES = {
 const SINGLE_VARIANTS = {
   story: 'story',
   free: 'free',
+  endless: 'endless',
 };
 
 const ROUND_COUNTDOWN_SECONDS = 3.9;
+const ENDLESS_SPAWN_INTERVAL = 5;
+const ENDLESS_STAGE_KILL_STEP = 10;
+const ENDLESS_ELITE_SPAWN_STEP = 20;
+const ENDLESS_STAGE_ROTATION = ['classic', 'neon', 'glacier', 'magma', 'storm', 'gravity', 'collapse'];
+const ENDLESS_ENEMY_IDS = ['p2', 'p3', 'p4', 'npcA', 'npcB'];
 
 const ONLINE_PLAYER_ROLES = ['p1', 'p2', 'p3', 'p4'];
 const ONLINE_GUEST_ROLES = ['p2', 'p3', 'p4'];
@@ -350,8 +357,8 @@ const CAMPAIGN_STAGES = [
       {
         charId: 'swift',
         slot: 'CPU-ALPHA',
-        scale: { attack: 0.96, defense: 0.96, speed: 1.02, size: 0.98, mass: 0.97 },
-        ai: { aggression: 0.9, edgeCare: 1.12, strafe: 0.32, jitter: 0.42 },
+        scale: { attack: 0.62, defense: 0.68, speed: 0.74, size: 0.9, mass: 0.78 },
+        ai: { aggression: 0.52, edgeCare: 0.88, strafe: 0.1, jitter: 0.12 },
       },
     ],
   },
@@ -363,8 +370,8 @@ const CAMPAIGN_STAGES = [
       {
         charId: 'blaze',
         slot: 'CPU-BLAZE',
-        scale: { attack: 1.08, defense: 1.01, speed: 1.05, size: 1.0, mass: 1.02 },
-        ai: { aggression: 1.03, edgeCare: 1.08, strafe: 0.45, jitter: 0.36 },
+        scale: { attack: 0.78, defense: 0.8, speed: 0.84, size: 0.94, mass: 0.86 },
+        ai: { aggression: 0.68, edgeCare: 0.94, strafe: 0.18, jitter: 0.18 },
       },
     ],
   },
@@ -376,8 +383,8 @@ const CAMPAIGN_STAGES = [
       {
         charId: 'fort',
         slot: 'CPU-FORT',
-        scale: { attack: 1.12, defense: 1.14, speed: 1.05, size: 1.02, mass: 1.13 },
-        ai: { aggression: 1.06, edgeCare: 1.19, strafe: 0.34, jitter: 0.3 },
+        scale: { attack: 0.9, defense: 0.92, speed: 0.9, size: 0.96, mass: 0.9 },
+        ai: { aggression: 0.78, edgeCare: 1.0, strafe: 0.24, jitter: 0.22 },
       },
     ],
   },
@@ -614,6 +621,7 @@ function createPlayer({ id, slot, team, controls = null, isBot = false }) {
     freezeImmuneTimer: 0,
     knockbackGraceTimer: 0,
     knockbackSpeedLimit: 0,
+    itemDisabled: false,
     aimX: 1,
     aimY: 0,
     cooldownFire: 0,
@@ -720,6 +728,14 @@ const state = {
       enemyCount: 1,
       activeSlot: 0,
     },
+    endless: {
+      kills: 0,
+      spawnTimer: ENDLESS_SPAWN_INTERVAL,
+      totalSpawned: 0,
+      lastStageShiftAt: 0,
+      stageCursor: 0,
+      bestKills: 0,
+    },
   },
 };
 
@@ -776,6 +792,18 @@ function isSingleStoryMode() {
 
 function isSingleFreeMode() {
   return isSingleMode() && state.single.variant === SINGLE_VARIANTS.free;
+}
+
+function isSingleEndlessMode() {
+  return isSingleMode() && state.single.variant === SINGLE_VARIANTS.endless;
+}
+
+function resetEndlessProgress() {
+  state.single.endless.kills = 0;
+  state.single.endless.spawnTimer = ENDLESS_SPAWN_INTERVAL;
+  state.single.endless.totalSpawned = 0;
+  state.single.endless.lastStageShiftAt = 0;
+  state.single.endless.stageCursor = 0;
 }
 
 function getFreeEnemyRoleBySlot(slotIndex) {
@@ -854,11 +882,11 @@ function setFlowScene(scene) {
     if (onlineControlsEl) onlineControlsEl.classList.add('is-hidden');
     if (isSingleMode()) {
       if (flowState.singleChoiceOpen) {
-        setModeStatus('SINGLE: STORY / FREE BATTLE を選択');
+        setModeStatus('SINGLE: STORY / FREE BATTLE / ENDLESS を選択');
         setCampaignInfoText();
       } else {
         setModeStatus('モードを選択してください');
-        campaignInfoEl.textContent = 'SINGLEを押すと STORY / FREE を選択';
+        campaignInfoEl.textContent = 'SINGLEを押すと STORY / FREE / ENDLESS を選択';
       }
     } else {
       setModeStatus('モードを選択してください');
@@ -924,7 +952,9 @@ function renderSetupStep() {
   }
 
   if (setupTitleMainEl) {
-    if (flowState.setupContext === 'single_story') setupTitleMainEl.textContent = 'STORY SETUP';
+    if (flowState.setupContext === 'single_story') {
+      setupTitleMainEl.textContent = isSingleEndlessMode() ? 'ENDLESS SETUP' : 'STORY SETUP';
+    }
     else if (flowState.setupContext === 'single_free') setupTitleMainEl.textContent = 'FREE BATTLE SETUP';
     else if (flowState.setupContext === 'local') setupTitleMainEl.textContent = 'LOCAL 2P SETUP';
     else setupTitleMainEl.textContent = 'ONLINE SETUP';
@@ -968,7 +998,11 @@ function renderSetupStep() {
 }
 
 function setSingleVariant(nextVariant, byUser = false) {
-  const variant = nextVariant === SINGLE_VARIANTS.free ? SINGLE_VARIANTS.free : SINGLE_VARIANTS.story;
+  const variant = nextVariant === SINGLE_VARIANTS.free
+    ? SINGLE_VARIANTS.free
+    : nextVariant === SINGLE_VARIANTS.endless
+      ? SINGLE_VARIANTS.endless
+      : SINGLE_VARIANTS.story;
   state.single.variant = variant;
   state.single.stageIndex = 0;
   state.single.pendingAdvance = null;
@@ -978,9 +1012,13 @@ function setSingleVariant(nextVariant, byUser = false) {
     const stage = getCampaignStage();
     applyStage(stage.stageId);
     setModeStatus('STORY | 全7ステージを勝ち抜け');
-  } else {
+  } else if (variant === SINGLE_VARIANTS.free) {
     applyStage(state.selection.stageId);
     setModeStatus('FREE BATTLE | 条件を自由に選んで対戦');
+  } else {
+    resetEndlessProgress();
+    applyStage(ENDLESS_STAGE_ROTATION[0]);
+    setModeStatus('ENDLESS | 無制限サバイバルで撃破数を伸ばせ');
   }
 
   updateRuleText();
@@ -995,7 +1033,7 @@ function setSingleVariant(nextVariant, byUser = false) {
 }
 
 function beginSingleSetupFlow() {
-  beginSetupFlow(isSingleStoryMode() ? 'single_story' : 'single_free');
+  beginSetupFlow((isSingleStoryMode() || isSingleEndlessMode()) ? 'single_story' : 'single_free');
 }
 
 function beginSetupFlow(context) {
@@ -1025,7 +1063,7 @@ function beginModeFlow(mode) {
   if (mode === PLAY_MODES.single) {
     flowState.singleChoiceOpen = true;
     setFlowScene(FLOW_SCENES.title);
-    setModeStatus('SINGLE: STORY / FREE BATTLE を選択');
+    setModeStatus('SINGLE: STORY / FREE BATTLE / ENDLESS を選択');
     setCampaignInfoText();
     return;
   }
@@ -1297,7 +1335,7 @@ function applyStage(stageId) {
 }
 
 function canEditStageSelection() {
-  if (isSingleStoryMode()) return false;
+  if (isSingleStoryMode() || isSingleEndlessMode()) return false;
   if (isSingleFreeMode()) return true;
   if (!isOnlineMode()) return true;
   if (!online.enabled) return true;
@@ -1452,6 +1490,9 @@ function renderCharacterCards(container, playerIndex) {
 
 function getEnemyRosterFromCampaign() {
   if (!isSingleMode()) return [roster.p2];
+  if (isSingleEndlessMode()) {
+    return state.activePlayers.filter((player) => player.id !== 'p1');
+  }
   if (isSingleFreeMode()) {
     const slots = ['p2', 'npcA', 'npcB'];
     const count = getFreeEnemyCount();
@@ -1470,6 +1511,8 @@ function syncNamePlates() {
     const enemies = getEnemyRosterFromCampaign();
     if (enemies.length > 1) {
       p2NameEl.textContent = isSingleFreeMode() ? `RIVALS x${enemies.length}` : 'ENEMY TEAM';
+    } else if (isSingleEndlessMode() && enemies.length === 0) {
+      p2NameEl.textContent = 'ENEMY | SPAWNING...';
     } else {
       const enemy = enemies[0] || roster.npcA;
       p2NameEl.textContent = `${enemy.slot} | ${enemy.char.name}`;
@@ -1503,13 +1546,14 @@ function refreshSelectionUi() {
   modeSingleBtn.classList.toggle('is-active', state.playMode === PLAY_MODES.single);
   if (singleStoryBtn) singleStoryBtn.classList.toggle('is-active', isSingleStoryMode());
   if (singleFreeBtn) singleFreeBtn.classList.toggle('is-active', isSingleFreeMode());
+  if (singleEndlessBtn) singleEndlessBtn.classList.toggle('is-active', isSingleEndlessMode());
 
   const showSingleChoice = isSingleMode() && flowState.scene === FLOW_SCENES.title && flowState.singleChoiceOpen;
   if (singleModeChoiceEl) singleModeChoiceEl.classList.toggle('is-hidden', !showSingleChoice);
 
   const showOnlineControls = isOnlineMode() && flowState.scene === FLOW_SCENES.onlineLobby;
   onlineControlsEl.classList.toggle('is-hidden', !showOnlineControls);
-  p2ChoiceBlockEl.classList.toggle('is-hidden', isSingleStoryMode());
+  p2ChoiceBlockEl.classList.toggle('is-hidden', isSingleStoryMode() || isSingleEndlessMode());
 
   document.querySelectorAll('[data-stage-id]').forEach((card) => {
     card.classList.toggle('is-selected', card.dataset.stageId === state.stageId);
@@ -1528,6 +1572,8 @@ function refreshSelectionUi() {
     if (isSingleFreeMode()) {
       p2CharTitleEl.textContent = 'ENEMY CHARACTER';
     } else if (isSingleStoryMode()) {
+      p2CharTitleEl.textContent = 'ENEMY CHARACTER';
+    } else if (isSingleEndlessMode()) {
       p2CharTitleEl.textContent = 'ENEMY CHARACTER';
     } else if (isOnlineMode()) {
       if (online.enabled && !online.isHost) {
@@ -1648,6 +1694,8 @@ function configureSingleStoryEnemies() {
 
   if (enemyA) applyEnemyTuning(roster.npcA, enemyA, 0);
   if (enemyB) applyEnemyTuning(roster.npcB, enemyB, 1);
+  roster.npcA.itemDisabled = false;
+  roster.npcB.itemDisabled = false;
 
   if (!enemyB) {
     roster.npcB.slot = 'CPU-2';
@@ -1680,6 +1728,7 @@ function configureSingleFreeEnemies() {
     applyCharacter(player, pickedCharId);
     player.isBot = true;
     player.team = 'right';
+    player.itemDisabled = false;
     player.slot = `CPU-${index + 1}`;
     player.ai = {
       aggression: 0.96 + index * 0.08,
@@ -1694,7 +1743,160 @@ function configureSingleFreeEnemies() {
   setActivePlayers(activeIds);
 }
 
+function tuneEndlessEnemy(player, isElite, spawnIndex) {
+  player.isBot = true;
+  player.team = 'right';
+  player.itemDisabled = true;
+
+  if (isElite) {
+    const eliteChars = ['blaze', 'fort', 'swift', 'crusher', 'balance'];
+    const charId = eliteChars[Math.floor(Math.random() * eliteChars.length)];
+    applyCharacter(player, charId);
+    player.attackMul *= 1.02;
+    player.defenseMul *= 1.0;
+    player.speedMul *= 1.0;
+    player.baseRadius *= 0.92;
+    player.massBase *= 0.9;
+    player.radius = player.baseRadius;
+    player.slot = `ELITE-${Math.max(1, Math.floor(spawnIndex / ENDLESS_ELITE_SPAWN_STEP))}`;
+    player.ai = {
+      aggression: 1.08,
+      edgeCare: 1.04,
+      strafe: 0.46,
+      jitter: 0.34,
+    };
+    return;
+  }
+
+  applyCharacter(player, 'swift');
+  player.attackMul *= 0.46;
+  player.defenseMul *= 0.7;
+  player.speedMul *= 0.8;
+  player.baseRadius *= 0.64;
+  player.massBase *= 0.56;
+  player.radius = player.baseRadius;
+  player.slot = `MOB-${spawnIndex}`;
+  player.ai = {
+    aggression: 0.56,
+    edgeCare: 0.94,
+    strafe: 0.2,
+    jitter: 0.24,
+  };
+}
+
+function spawnEndlessEnemy(force = false) {
+  if (!isSingleEndlessMode()) return false;
+
+  const currentEnemies = state.activePlayers.filter((player) => player.id !== 'p1').length;
+  if (!force && currentEnemies >= ENDLESS_ENEMY_IDS.length) return false;
+
+  const nextId = ENDLESS_ENEMY_IDS.find((id) => !state.activePlayerIds.includes(id));
+  if (!nextId) return false;
+
+  const endless = state.single.endless;
+  const spawnIndex = endless.totalSpawned + 1;
+  const isElite = spawnIndex % ENDLESS_ELITE_SPAWN_STEP === 0;
+  const player = roster[nextId];
+  if (!player) return false;
+
+  tuneEndlessEnemy(player, isElite, spawnIndex);
+
+  const angle = Math.random() * Math.PI * 2;
+  const spawnDistance = Math.max(150, getArenaRadius() * 0.72);
+  const x = center.x + Math.cos(angle) * spawnDistance;
+  const y = center.y + Math.sin(angle) * spawnDistance;
+  resetPlayer(player, x, y);
+  player.itemDisabled = true;
+
+  const toCenterX = center.x - player.x;
+  const toCenterY = center.y - player.y;
+  const toCenterLen = Math.hypot(toCenterX, toCenterY) || 1;
+  const initSpeed = isElite ? 180 : 120;
+  player.vx = (toCenterX / toCenterLen) * initSpeed;
+  player.vy = (toCenterY / toCenterLen) * initSpeed;
+
+  setActivePlayers([...state.activePlayerIds, nextId]);
+  endless.totalSpawned = spawnIndex;
+
+  if (isElite) {
+    playSfx('spawnWarn');
+    setStatus(`ENDLESS: ELITE ${player.slot} 出現!`);
+  }
+  return true;
+}
+
+function updateEndlessSpawns(dt) {
+  if (!isSingleEndlessMode() || state.phase !== 'playing') return;
+
+  const endless = state.single.endless;
+  endless.spawnTimer -= dt;
+  while (endless.spawnTimer <= 0) {
+    const spawned = spawnEndlessEnemy(false);
+    endless.spawnTimer += ENDLESS_SPAWN_INTERVAL;
+    if (!spawned) {
+      endless.spawnTimer = Math.max(0.9, endless.spawnTimer);
+      break;
+    }
+  }
+}
+
+function keepPlayersInsideArena() {
+  const radius = getArenaRadius();
+  state.activePlayers.forEach((player) => {
+    const dx = player.x - center.x;
+    const dy = player.y - center.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const limit = Math.max(24, radius - player.radius * 1.2);
+    if (dist <= limit) return;
+    const ratio = limit / dist;
+    player.x = center.x + dx * ratio;
+    player.y = center.y + dy * ratio;
+  });
+}
+
+function applyEndlessStageShiftIfNeeded() {
+  const endless = state.single.endless;
+  let shifted = false;
+  while (endless.kills >= endless.lastStageShiftAt + ENDLESS_STAGE_KILL_STEP) {
+    endless.lastStageShiftAt += ENDLESS_STAGE_KILL_STEP;
+    endless.stageCursor = (endless.stageCursor + 1) % ENDLESS_STAGE_ROTATION.length;
+    const nextStageId = ENDLESS_STAGE_ROTATION[endless.stageCursor];
+    applyStage(nextStageId);
+    keepPlayersInsideArena();
+    shifted = true;
+  }
+
+  if (shifted) {
+    playSfx('spawnWarn');
+    setStatus(`ENDLESS: ${endless.kills}体撃破! STAGEが ${state.stage.name} に変化`);
+  }
+}
+
+function configureSingleEndlessEnemies() {
+  applyStage(ENDLESS_STAGE_ROTATION[0]);
+  ENDLESS_ENEMY_IDS.forEach((id) => {
+    const enemy = roster[id];
+    if (!enemy) return;
+    enemy.isBot = true;
+    enemy.team = 'right';
+    enemy.itemDisabled = true;
+    enemy.slot = 'MOB';
+    enemy.ai = {
+      aggression: 0.56,
+      edgeCare: 0.94,
+      strafe: 0.2,
+      jitter: 0.24,
+    };
+    applyCharacter(enemy, 'swift');
+  });
+  setActivePlayers(['p1']);
+}
+
 function configureSingleEnemies() {
+  if (isSingleEndlessMode()) {
+    configureSingleEndlessEnemies();
+    return;
+  }
   if (isSingleFreeMode()) {
     configureSingleFreeEnemies();
     return;
@@ -1705,6 +1907,7 @@ function configureSingleEnemies() {
 function configureOnlineLineup() {
   roster.p1.slot = 'P1';
   roster.p1.team = 'left';
+  roster.p1.itemDisabled = false;
   applyCharacter(roster.p1, state.selection.p1);
 
   const activeIds = ['p1'];
@@ -1716,6 +1919,7 @@ function configureOnlineLineup() {
 
     player.isBot = false;
     player.team = 'right';
+    player.itemDisabled = false;
     player.slot = role.toUpperCase();
     applyCharacter(player, state.selection[role] || 'balance');
     activeIds.push(role);
@@ -1742,6 +1946,7 @@ function configureOnlineLineup() {
     const player = preset.player;
     player.isBot = true;
     player.team = 'right';
+    player.itemDisabled = false;
     player.slot = preset.slot;
     player.ai = { ...preset.ai };
     applyCharacter(player, preset.charId);
@@ -1753,6 +1958,7 @@ function configureOnlineLineup() {
 
 function configureLineupForMode() {
   applyCharacter(roster.p1, state.selection.p1);
+  roster.p1.itemDisabled = false;
 
   if (isSingleMode()) {
     configureSingleEnemies();
@@ -1767,6 +1973,7 @@ function configureLineupForMode() {
   roster.p2.slot = 'P2';
   roster.p2.team = 'right';
   roster.p2.isBot = false;
+  roster.p2.itemDisabled = false;
   applyCharacter(roster.p2, state.selection.p2);
   setActivePlayers(['p1', 'p2']);
 }
@@ -1784,6 +1991,13 @@ function setCampaignInfoText() {
       return `E${index + 1}:${char ? char.name : charId}`;
     }).join(' / ');
     campaignInfoEl.textContent = `FREE BATTLE | STAGE: ${state.stage.name} | ${enemyNames}`;
+    return;
+  }
+
+  if (isSingleEndlessMode()) {
+    const kills = state.single.endless.kills;
+    const nextStageAt = Math.floor(kills / ENDLESS_STAGE_KILL_STEP + 1) * ENDLESS_STAGE_KILL_STEP;
+    campaignInfoEl.textContent = `ENDLESS | KILLS ${kills} | STAGE ${state.stage.name} | NEXT SHIFT ${nextStageAt}`;
     return;
   }
 
@@ -1818,6 +2032,11 @@ function updateRuleText() {
     return;
   }
 
+  if (isSingleEndlessMode()) {
+    ruleTextEl.innerHTML = 'ENDLESS | <strong>無制限</strong> | 5秒ごとに敵増援 | 10撃破ごとにステージ変化';
+    return;
+  }
+
   ruleTextEl.innerHTML = `先に <strong>${CONFIG.pointsToWin}本</strong> 先取で勝ち`;
 }
 
@@ -1829,6 +2048,11 @@ function updateHintText() {
 
   if (isSingleFreeMode()) {
     hintTextEl.textContent = 'PC操作: YOU = WASD / QでITEM | FREEは敵数/キャラ/ステージを自由設定';
+    return;
+  }
+
+  if (isSingleEndlessMode()) {
+    hintTextEl.textContent = 'PC操作: YOU = WASD / QでITEM | ENDLESSは撃破数チャレンジ';
     return;
   }
 
@@ -1872,9 +2096,13 @@ function updateControlUi() {
     touchColP1.classList.add('is-active');
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = 'p1';
-    setControlHint(isSingleStoryMode()
-      ? 'STORY | スティックのみで移動。敵をリングアウト'
-      : 'FREE BATTLE | スティックのみで移動。全員バトルロイヤル');
+    if (isSingleStoryMode()) {
+      setControlHint('STORY | スティックのみで移動。敵をリングアウト');
+    } else if (isSingleEndlessMode()) {
+      setControlHint('ENDLESS | 生き残り続けて撃破数を伸ばす');
+    } else {
+      setControlHint('FREE BATTLE | スティックのみで移動。全員バトルロイヤル');
+    }
     if (startBtn) startBtn.disabled = false;
     resetBtn.disabled = false;
     updateItemButtons();
@@ -1977,7 +2205,11 @@ function updateStartButtonLabel() {
   }
 
   if (state.phase === 'playing') {
-    startBtn.textContent = isSingleMode() ? 'Retry Stage' : 'Rematch';
+    if (isSingleEndlessMode()) {
+      startBtn.textContent = 'Retry Endless';
+    } else {
+      startBtn.textContent = isSingleMode() ? 'Retry Stage' : 'Rematch';
+    }
     return;
   }
 
@@ -1987,13 +2219,17 @@ function updateStartButtonLabel() {
     return;
   }
 
-  if (isSingleMode() && state.single.campaignComplete) {
+  if (isSingleStoryMode() && state.single.campaignComplete) {
     startBtn.textContent = 'Restart Campaign';
     return;
   }
 
   if (state.phase === 'match_over') {
-    startBtn.textContent = isSingleMode() ? 'Retry Stage' : 'Rematch';
+    if (isSingleEndlessMode()) {
+      startBtn.textContent = 'Retry Endless';
+    } else {
+      startBtn.textContent = isSingleMode() ? 'Retry Stage' : 'Rematch';
+    }
     return;
   }
 
@@ -2057,9 +2293,13 @@ function switchMode(nextMode, initial = false) {
       const stage = getCampaignStage();
       applyStage(stage.stageId);
       setModeStatus('STORY | 全7ステージを勝ち抜け');
-    } else {
+    } else if (isSingleFreeMode()) {
       applyStage(state.selection.stageId);
       setModeStatus('FREE BATTLE | 条件を自由に選んで対戦');
+    } else {
+      resetEndlessProgress();
+      applyStage(ENDLESS_STAGE_ROTATION[0]);
+      setModeStatus('ENDLESS | 無制限サバイバルで撃破数を伸ばせ');
     }
     setCampaignInfoText();
   }
@@ -2166,12 +2406,20 @@ function resetRound() {
   state.shakeTime = 0;
   state.shakePower = 0;
   state.itemTimer = randomRange(state.stage.itemSpawnMin, state.stage.itemSpawnMax);
+
+  if (isSingleEndlessMode()) {
+    state.single.endless.spawnTimer = 0.8;
+    spawnEndlessEnemy(true);
+  }
 }
 
 function resetScoresAndRound() {
   state.scoreLeft = 0;
   state.scoreRight = 0;
   state.round = 1;
+  if (isSingleEndlessMode()) {
+    resetEndlessProgress();
+  }
 }
 
 function beginRoundCountdown(startStatus) {
@@ -2189,6 +2437,9 @@ function resetMatch(idle) {
     const stage = getCampaignStage();
     applyStage(stage.stageId);
     setCampaignInfoText();
+  } else if (isSingleEndlessMode()) {
+    applyStage(ENDLESS_STAGE_ROTATION[0]);
+    setCampaignInfoText();
   } else {
     applyStage(state.selection.stageId);
     if (isSingleFreeMode()) {
@@ -2204,6 +2455,8 @@ function resetMatch(idle) {
     state.countdownTimer = 0;
     if (isSingleStoryMode()) {
       setStatus(`STAGE ${state.single.stageIndex + 1} | Tapで開始`);
+    } else if (isSingleEndlessMode()) {
+      setStatus('ENDLESS | Tapでサバイバル開始');
     } else if (isSingleFreeMode()) {
       setStatus('FREE BATTLE | Tapでバトル開始');
     } else if (isOnlineMode() && !online.enabled) {
@@ -2214,6 +2467,8 @@ function resetMatch(idle) {
   } else {
     if (isSingleStoryMode()) {
       beginRoundCountdown(`STAGE ${state.single.stageIndex + 1} | Ready...`);
+    } else if (isSingleEndlessMode()) {
+      beginRoundCountdown('ENDLESS | Ready...');
     } else if (isSingleFreeMode()) {
       beginRoundCountdown('FREE BATTLE | Ready...');
     } else {
@@ -2248,7 +2503,7 @@ function startMatch() {
     }
   }
 
-  if (isSingleMode() && state.single.campaignComplete) {
+  if (isSingleStoryMode() && state.single.campaignComplete) {
     state.single.stageIndex = 0;
     state.single.campaignComplete = false;
   }
@@ -2760,6 +3015,7 @@ function triggerAutoShots(player, dt) {
 
 function triggerBotConsumable(player, dt) {
   if (!player?.isBot || state.phase !== 'playing') return;
+  if (player.itemDisabled) return;
   if (player.freezeTimer > 0) return;
 
   const type = getPreferredConsumable(player);
@@ -2971,6 +3227,7 @@ function updateItem(dt) {
 
   let picker = null;
   for (const player of state.activePlayers) {
+    if (player.itemDisabled) continue;
     const dx = player.x - item.x;
     const dy = player.y - item.y;
     const dist = Math.hypot(dx, dy);
@@ -3448,6 +3705,45 @@ function teamAliveCount(team) {
   return state.activePlayers.filter((player) => player.team === team).length;
 }
 
+function handleEndlessRingOut(outPlayers) {
+  if (!isSingleEndlessMode()) return;
+
+  const outIds = new Set(outPlayers.map((player) => player.id));
+  const heroOut = outIds.has('p1');
+  let defeatedEnemies = 0;
+
+  outPlayers.forEach((player) => {
+    burstEffect(player.x, player.y, player.id === 'p1' ? '#90fff0' : '#ffc18f');
+    if (player.id !== 'p1') {
+      defeatedEnemies += 1;
+    }
+  });
+
+  state.activePlayers = state.activePlayers.filter((player) => !outIds.has(player.id));
+  state.activePlayerIds = state.activePlayers.map((player) => player.id);
+
+  if (defeatedEnemies > 0) {
+    state.single.endless.kills += defeatedEnemies;
+    state.single.endless.bestKills = Math.max(state.single.endless.bestKills, state.single.endless.kills);
+    applyEndlessStageShiftIfNeeded();
+    playSfx('ringout');
+    if (!heroOut) {
+      setStatus(`ENDLESS: ${state.single.endless.kills}体撃破`);
+    }
+  }
+
+  if (!heroOut) {
+    return;
+  }
+
+  state.phase = 'match_over';
+  state.single.pendingAdvance = null;
+  playSfx('decide');
+  setStatus(`ENDLESS 終了 | 撃破 ${state.single.endless.kills} 体`);
+  updateStartButtonLabel();
+  updateHud();
+}
+
 function checkRingOut() {
   const outPlayers = state.activePlayers.filter((player) => {
     const dist = Math.hypot(player.x - center.x, player.y - center.y);
@@ -3455,6 +3751,11 @@ function checkRingOut() {
   });
 
   if (outPlayers.length === 0) return;
+
+  if (isSingleEndlessMode()) {
+    handleEndlessRingOut(outPlayers);
+    return;
+  }
 
   outPlayers.forEach((player) => {
     burstEffect(player.x, player.y, player.id === 'p1' ? '#90fff0' : '#ffc18f');
@@ -3801,7 +4102,14 @@ function updateGuestInput(dt) {
 }
 
 function stepPlaying(dt) {
-  state.timer = Math.max(0, state.timer - dt);
+  if (isSingleEndlessMode()) {
+    state.timer -= dt;
+    if (state.timer <= 0) {
+      state.timer = CONFIG.roundSeconds;
+    }
+  } else {
+    state.timer = Math.max(0, state.timer - dt);
+  }
 
   const inputs = new Map();
   state.activePlayers.forEach((player) => {
@@ -3833,9 +4141,10 @@ function stepPlaying(dt) {
   updateBullets(dt);
   updateBombs(dt);
   updateItem(dt);
+  updateEndlessSpawns(dt);
   checkRingOut();
 
-  if (state.phase === 'playing' && state.timer <= 0) {
+  if (!isSingleEndlessMode() && state.phase === 'playing' && state.timer <= 0) {
     judgeByDistance();
   }
 }
@@ -3849,6 +4158,8 @@ function updateSimulation(dt) {
       state.phase = 'playing';
       if (isSingleStoryMode()) {
         setStatus(`STAGE ${state.single.stageIndex + 1} 開始!`);
+      } else if (isSingleEndlessMode()) {
+        setStatus('ENDLESS 開始! 生き残って撃破数を伸ばせ');
       } else if (isSingleFreeMode()) {
         setStatus('FREE BATTLE 開始!');
       } else {
@@ -4304,6 +4615,8 @@ function drawInGameScoreBoard() {
   const panelY = 14;
   const rightLabel = isSingleMode() ? 'ENEMY' : getRightTeamLabel();
   const timeLeft = Math.ceil(state.timer);
+  const endlessKills = state.single.endless.kills;
+  const endlessAlive = Math.max(0, state.activePlayers.filter((player) => player.id !== 'p1').length);
 
   ctx.save();
   ctx.fillStyle = 'rgba(3, 11, 14, 0.58)';
@@ -4324,13 +4637,17 @@ function drawInGameScoreBoard() {
   ctx.textAlign = 'center';
   ctx.font = "bold 11px 'Chakra Petch', sans-serif";
   ctx.fillStyle = 'rgba(236, 247, 244, 0.8)';
-  ctx.fillText('TIME', panelX + panelW * 0.5, panelY + 16);
+  ctx.fillText(isSingleEndlessMode() ? 'ENDLESS' : 'TIME', panelX + panelW * 0.5, panelY + 16);
   ctx.font = "bold 24px 'Chakra Petch', sans-serif";
-  ctx.fillStyle = timeLeft <= 10 ? '#ff9f86' : '#ffe08e';
-  ctx.fillText(String(timeLeft), panelX + panelW * 0.5, panelY + 43);
-
-  drawGameScorePips(panelX + 14, panelY + 50, state.scoreLeft, 'rgba(61, 238, 212, 0.95)');
-  drawGameScorePips(panelX + panelW - 14 - ((CONFIG.pointsToWin - 1) * 16), panelY + 50, state.scoreRight, 'rgba(255, 182, 108, 0.96)');
+  if (isSingleEndlessMode()) {
+    ctx.fillStyle = '#ffe08e';
+    ctx.fillText(`K${endlessKills} / E${endlessAlive}`, panelX + panelW * 0.5, panelY + 43);
+  } else {
+    ctx.fillStyle = timeLeft <= 10 ? '#ff9f86' : '#ffe08e';
+    ctx.fillText(String(timeLeft), panelX + panelW * 0.5, panelY + 43);
+    drawGameScorePips(panelX + 14, panelY + 50, state.scoreLeft, 'rgba(61, 238, 212, 0.95)');
+    drawGameScorePips(panelX + panelW - 14 - ((CONFIG.pointsToWin - 1) * 16), panelY + 50, state.scoreRight, 'rgba(255, 182, 108, 0.96)');
+  }
 
   ctx.restore();
 }
@@ -4365,6 +4682,8 @@ function drawOverlay() {
   if (state.phase === 'idle') {
     const title = isSingleStoryMode()
       ? `STORY STAGE ${state.single.stageIndex + 1}`
+      : isSingleEndlessMode()
+        ? 'ENDLESS SURVIVAL'
       : isSingleFreeMode()
         ? 'FREE BATTLE'
         : `${getModeLabel()} BATTLE`;
@@ -4372,6 +4691,8 @@ function drawOverlay() {
     ctx.font = "22px 'Noto Sans JP', sans-serif";
     if (isSingleStoryMode() && state.single.pendingAdvance === 'stage') {
       ctx.fillText('画面タップで次ステージ開始', center.x, center.y + 32);
+    } else if (isSingleEndlessMode()) {
+      ctx.fillText('Tapでサバイバル開始', center.x, center.y + 32);
     } else {
       ctx.fillText('Tapでバトル開始', center.x, center.y + 32);
     }
@@ -4392,6 +4713,10 @@ function drawOverlay() {
       ctx.fillText('CAMPAIGN CLEAR', center.x, center.y - 20);
       ctx.font = "22px 'Noto Sans JP', sans-serif";
       ctx.fillText('Restart Campaignで1から再挑戦', center.x, center.y + 32);
+    } else if (isSingleEndlessMode()) {
+      ctx.fillText('ENDLESS OVER', center.x, center.y - 20);
+      ctx.font = "22px 'Noto Sans JP', sans-serif";
+      ctx.fillText(`撃破数 ${state.single.endless.kills} 体 | Tapで再挑戦`, center.x, center.y + 32);
     } else if (isSingleStoryMode()) {
       ctx.fillText(`STAGE ${state.single.stageIndex + 1}`, center.x, center.y - 20);
       ctx.font = "22px 'Noto Sans JP', sans-serif";
@@ -4525,19 +4850,30 @@ function renderSetMarks(container, wins) {
 }
 
 function updateHud() {
-  p1ScoreEl.textContent = `${state.scoreLeft}`;
-  p2ScoreEl.textContent = `${state.scoreRight}`;
-  renderSetMarks(p1SetMarksEl, state.scoreLeft);
-  renderSetMarks(p2SetMarksEl, state.scoreRight);
+  if (isSingleEndlessMode()) {
+    const aliveEnemies = Math.max(0, state.activePlayers.filter((player) => player.id !== 'p1').length);
+    p1ScoreEl.textContent = `${state.single.endless.kills}`;
+    p2ScoreEl.textContent = `${aliveEnemies}`;
+    renderSetMarks(p1SetMarksEl, 0);
+    renderSetMarks(p2SetMarksEl, 0);
+  } else {
+    p1ScoreEl.textContent = `${state.scoreLeft}`;
+    p2ScoreEl.textContent = `${state.scoreRight}`;
+    renderSetMarks(p1SetMarksEl, state.scoreLeft);
+    renderSetMarks(p2SetMarksEl, state.scoreRight);
+  }
 
   p1BuffsEl.textContent = teamBuffList('left');
   p2BuffsEl.textContent = teamBuffList('right');
 
-  timerEl.textContent = `${Math.ceil(state.timer)}`;
-  roundEl.textContent = `ROUND ${state.round}`;
+  timerEl.textContent = isSingleEndlessMode() ? '∞' : `${Math.ceil(state.timer)}`;
+  roundEl.textContent = isSingleEndlessMode() ? 'ENDLESS' : `ROUND ${state.round}`;
   statusEl.textContent = state.status;
   if (setScoreTextEl) {
-    if (state.battleRoyale && isSingleMode()) {
+    if (isSingleEndlessMode()) {
+      const aliveEnemies = Math.max(0, state.activePlayers.filter((player) => player.id !== 'p1').length);
+      setScoreTextEl.textContent = `ENDLESS | KILLS ${state.single.endless.kills} | ALIVE ${aliveEnemies}`;
+    } else if (state.battleRoyale && isSingleMode()) {
       setScoreTextEl.textContent = `先取${CONFIG.pointsToWin} | YOU ${state.scoreLeft} - ${state.scoreRight} FIELD`;
     } else if (state.battleRoyale) {
       setScoreTextEl.textContent = `先取${CONFIG.pointsToWin} | P1 ${state.scoreLeft} - ${state.scoreRight} FIELD`;
@@ -5116,6 +5452,17 @@ function bindUi() {
     });
   }
 
+  if (singleEndlessBtn) {
+    singleEndlessBtn.addEventListener('click', () => {
+      if (!isSingleMode()) {
+        switchMode(PLAY_MODES.single);
+      }
+      flowState.singleChoiceOpen = false;
+      setSingleVariant(SINGLE_VARIANTS.endless, true);
+      beginSingleSetupFlow();
+    });
+  }
+
   if (setupBackBtn) {
     setupBackBtn.addEventListener('click', () => {
       if (flowState.scene !== FLOW_SCENES.setup) return;
@@ -5367,7 +5714,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-9')
+    navigator.serviceWorker.register('sw.js?v=20260321-10')
       .then((registration) => registration.update())
       .catch(() => {});
   });

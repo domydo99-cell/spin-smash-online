@@ -50,7 +50,7 @@ body {
 .single-mode-choice {
   margin-top: 8px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -71,7 +71,7 @@ body {
 }
 
 .mode-btn--sub {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   padding: 7px 9px;
 }
 
@@ -1508,7 +1508,8 @@ body.focus-mode .controls-title-wrap--arena {
   .hud-grid,
   .choice-grid,
   .choice-grid--stage,
-  .mode-switch {
+  .mode-switch,
+  .single-mode-choice {
     grid-template-columns: 1fr;
   }
 

@@ -1,9 +1,9 @@
-const CACHE_NAME = 'spin-smash-shell-v15';
+const CACHE_NAME = 'spin-smash-shell-v16';
 const SHELL_FILES = [
   '/',
   '/duel.html',
-  '/duel.css?v=20260321-9',
-  '/duel.js?v=20260321-9',
+  '/duel.css?v=20260321-10',
+  '/duel.js?v=20260321-10',
 ];
 
 self.addEventListener('install', (event) => {
