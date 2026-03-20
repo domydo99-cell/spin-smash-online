@@ -1390,23 +1390,30 @@ function updateRuleText() {
 
 function updateHintText() {
   if (isSingleMode()) {
-    hintTextEl.textContent = 'PC操作: YOU = WASD / QでITEM | Focusで全画面寄り';
+    hintTextEl.textContent = 'PC操作: YOU = WASD / QでITEM';
     return;
   }
 
   if (isOnlineMode()) {
-    hintTextEl.textContent = 'PC操作: ONLINEは自分の枠のみ操作（移動＋ITEM） | Focusで全画面寄り';
+    hintTextEl.textContent = 'PC操作: ONLINEは自分の枠のみ操作（移動＋ITEM）';
     return;
   }
 
-  hintTextEl.textContent = 'PC操作: P1 = WASD+Q / P2 = 矢印+/ | Focusで全画面寄り';
+  hintTextEl.textContent = 'PC操作: P1 = WASD+Q / P2 = 矢印+/';
 }
 
 function setFocusMode(enabled) {
   uiState.focusMode = Boolean(enabled);
   document.body.classList.toggle('focus-mode', uiState.focusMode);
-  focusBtn.textContent = uiState.focusMode ? 'Exit' : 'Focus';
+  if (focusBtn) {
+    focusBtn.textContent = uiState.focusMode ? 'Exit' : 'Focus';
+  }
   keepViewportTop();
+}
+
+function setControlHint(text) {
+  if (!controlHintEl) return;
+  controlHintEl.textContent = text;
 }
 
 function resetToTitleHome() {
@@ -1426,7 +1433,7 @@ function updateControlUi() {
     touchColP1.classList.add('is-active');
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = 'p1';
-    controlHintEl.textContent = 'SINGLE | スティックのみで移動。敵をリングアウト';
+    setControlHint('SINGLE | スティックのみで移動。敵をリングアウト');
     startBtn.disabled = false;
     resetBtn.disabled = false;
     updateItemButtons();
@@ -1441,7 +1448,7 @@ function updateControlUi() {
     touchColP1.classList.remove('is-active');
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = null;
-    controlHintEl.textContent = 'LOCAL 2P | 操作はスティックのみ。倒した方向へ移動';
+    setControlHint('LOCAL 2P | 操作はスティックのみ。倒した方向へ移動');
     startBtn.disabled = false;
     resetBtn.disabled = false;
     updateItemButtons();
@@ -1456,7 +1463,7 @@ function updateControlUi() {
     touchColP1.classList.add('is-active');
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = 'p1';
-    controlHintEl.textContent = 'ONLINE | ルーム作成または参加してください';
+    setControlHint('ONLINE | ルーム作成または参加してください');
     startBtn.disabled = true;
     resetBtn.disabled = false;
     updateItemButtons();
@@ -1471,7 +1478,7 @@ function updateControlUi() {
     touchColP1.classList.add('is-active');
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = 'p1';
-    controlHintEl.textContent = `ONLINE HOST | ROOM: ${online.roomCode} | ENEMY ${getOnlineEnemyCount()}体`;
+    setControlHint(`ONLINE HOST | ROOM: ${online.roomCode} | ENEMY ${getOnlineEnemyCount()}体`);
     startBtn.disabled = state.phase === 'match_over' ? true : !online.peerReady;
     resetBtn.disabled = false;
   } else {
@@ -1481,7 +1488,7 @@ function updateControlUi() {
     touchColP1.classList.remove('is-active');
     touchColP2.classList.add('is-active');
     uiState.activeItemSlot = getOnlineOwnRole();
-    controlHintEl.textContent = `ONLINE ${getOnlineOwnRole().toUpperCase()} | ROOM: ${online.roomCode} | ホストの開始待ち`;
+    setControlHint(`ONLINE ${getOnlineOwnRole().toUpperCase()} | ROOM: ${online.roomCode} | ホストの開始待ち`);
     startBtn.disabled = true;
     resetBtn.disabled = true;
   }
@@ -4105,9 +4112,11 @@ function bindUi() {
     triggerItemUse(uiState.activeItemSlot);
   });
 
-  focusBtn.addEventListener('click', () => {
-    setFocusMode(!uiState.focusMode);
-  });
+  if (focusBtn) {
+    focusBtn.addEventListener('click', () => {
+      setFocusMode(!uiState.focusMode);
+    });
+  }
 
   canvas.addEventListener('pointerdown', (event) => {
     if (!isSingleMode()) return;
@@ -4166,7 +4175,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260320-7')
+    navigator.serviceWorker.register('sw.js?v=20260320-9')
       .then((registration) => registration.update())
       .catch(() => {});
   });

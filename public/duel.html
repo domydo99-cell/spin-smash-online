@@ -4,18 +4,22 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SPIN SMASH | Online Duel</title>
-  <link rel="preload" href="duel.css?v=20260320-7" as="style" />
-  <link rel="preload" href="duel.js?v=20260320-7" as="script" />
+  <link rel="preload" href="duel.css?v=20260320-9" as="style" />
+  <link rel="preload" href="duel.js?v=20260320-9" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="duel.css?v=20260320-7" />
+  <link rel="stylesheet" href="duel.css?v=20260320-9" />
 </head>
 <body class="flow-title">
   <main class="layout">
     <section id="onlinePanel" class="panel online-panel is-flow-visible">
       <div class="title-hero" aria-hidden="true">
         <div class="title-hero__backdrop"></div>
+        <div class="title-logo">
+          <p class="title-logo__tag">HIGH IMPACT BATTLE ARENA</p>
+          <p class="title-logo__main"><span>SPIN</span><span>SMASH</span></p>
+        </div>
         <div class="title-hero__arena">
           <div class="battle-top battle-top--left">
             <i class="battle-top__ring"></i>
@@ -31,7 +35,7 @@
             <span class="impact-line impact-line--c"></span>
           </div>
         </div>
-        <p class="title-hero__copy">SPIN TO CRASH</p>
+        <p class="title-hero__copy">CRASH THE RIVAL OUT OF THE RING</p>
       </div>
 
       <div class="mode-switch" role="tablist" aria-label="モード選択">
@@ -109,6 +113,10 @@
         <div class="arena-overlay">
           <div id="connectionBanner" class="connection-banner is-hidden" aria-live="polite"></div>
           <div id="netBadge" class="net-badge is-hidden" aria-live="polite">NET --</div>
+          <div class="arena-corner-actions">
+            <button id="startBtn" class="action-btn" type="button">Start</button>
+            <button id="resetBtn" class="action-btn action-btn--ghost" type="button">Reset</button>
+          </div>
 
           <div id="touchRow" class="touch-row touch-row--overlay">
             <div id="touchColP1" class="touch-col">
@@ -129,15 +137,6 @@
           </div>
 
           <button id="quickItemBtn" class="quick-item-btn is-hidden" type="button" aria-label="アイテム発動">ITEM</button>
-        </div>
-      </div>
-
-      <div class="controls-title-wrap controls-title-wrap--arena">
-        <p id="controlHint" class="controls-title">操作はスティックのみ。倒した方向へ移動</p>
-        <div class="actions">
-          <button id="startBtn" class="action-btn" type="button">Start</button>
-          <button id="resetBtn" class="action-btn action-btn--ghost" type="button">Reset</button>
-          <button id="focusBtn" class="action-btn action-btn--ghost" type="button">Focus</button>
         </div>
       </div>
 
@@ -188,6 +187,6 @@
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="duel.js?v=20260320-7"></script>
+  <script src="duel.js?v=20260320-9"></script>
 </body>
 </html>

@@ -475,7 +475,7 @@ h1 {
   padding: clamp(8px, 1.4vw, 14px);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   pointer-events: none;
 }
 
@@ -593,10 +593,12 @@ h1 {
 }
 
 #gameCanvas {
-  width: 100%;
-  max-height: 92vh;
+  width: min(100vw, 100dvh);
+  max-width: 100%;
+  max-height: 100%;
   aspect-ratio: 1 / 1;
   display: block;
+  margin: 0 auto;
   background: #0a1419;
 }
 
@@ -618,8 +620,26 @@ h1 {
 }
 
 .touch-row--overlay {
-  margin-top: 0;
+  margin-top: auto;
+  margin-bottom: max(8px, env(safe-area-inset-bottom));
   align-self: stretch;
+}
+
+.arena-corner-actions {
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top));
+  right: clamp(8px, 1.8vw, 16px);
+  display: flex;
+  gap: 8px;
+  z-index: 4;
+  pointer-events: auto;
+}
+
+.arena-corner-actions .action-btn {
+  min-width: 74px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.84rem;
 }
 
 .arena-overlay .action-btn,
@@ -849,7 +869,7 @@ h1 {
 .quick-item-btn {
   position: absolute;
   left: clamp(10px, 2vw, 20px);
-  bottom: clamp(10px, 2vw, 22px);
+  bottom: max(10px, env(safe-area-inset-bottom));
   width: min(22vw, 96px);
   height: min(22vw, 96px);
   border-radius: 18px;
@@ -1055,15 +1075,17 @@ body.flow-online-lobby .online-panel.is-flow-visible {
 }
 
 body.flow-title .title-hero {
-  width: min(100%, 560px);
+  width: min(100%, 760px);
   display: grid;
-  gap: 8px;
+  gap: 14px;
   position: relative;
-  padding: 18px 16px 14px;
-  border-radius: 20px;
+  padding: clamp(18px, 4vw, 28px) clamp(16px, 3.6vw, 24px) clamp(14px, 3.2vw, 20px);
+  border-radius: 26px;
   border: 1px solid rgba(255, 255, 255, 0.28);
-  background: linear-gradient(145deg, rgba(3, 15, 23, 0.86), rgba(9, 32, 42, 0.74));
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
+  background:
+    radial-gradient(circle at 50% -22%, rgba(255, 215, 138, 0.18), transparent 48%),
+    linear-gradient(145deg, rgba(3, 15, 23, 0.86), rgba(9, 32, 42, 0.74));
+  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.45);
   overflow: hidden;
 }
 
@@ -1078,13 +1100,59 @@ body.flow-title .title-hero {
   pointer-events: none;
 }
 
+.title-logo {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+.title-logo__tag {
+  margin: 0;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: clamp(0.7rem, 1.8vw, 0.9rem);
+  letter-spacing: 0.28em;
+  color: rgba(232, 249, 245, 0.92);
+}
+
+.title-logo__main {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  line-height: 0.84;
+  text-align: center;
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: clamp(2.3rem, 12.4vw, 5.3rem);
+  color: #f3fffb;
+  text-shadow:
+    0 2px 0 rgba(8, 18, 25, 0.9),
+    0 0 28px rgba(100, 227, 210, 0.5),
+    0 0 52px rgba(255, 174, 92, 0.32);
+  animation: logoPulse 1900ms ease-in-out infinite;
+}
+
+.title-logo__main span {
+  display: block;
+}
+
+.title-logo__main span:last-child {
+  color: #ffe8b4;
+  text-shadow:
+    0 2px 0 rgba(29, 17, 10, 0.92),
+    0 0 28px rgba(255, 170, 90, 0.56),
+    0 0 54px rgba(255, 236, 184, 0.22);
+}
+
 .title-hero__arena {
   position: relative;
-  height: clamp(144px, 28vw, 186px);
+  height: clamp(220px, 44vw, 330px);
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.24);
   background:
-    radial-gradient(circle at center, rgba(82, 213, 204, 0.09), rgba(2, 8, 12, 0.84) 65%),
+    radial-gradient(circle at center, rgba(82, 213, 204, 0.12), rgba(2, 8, 12, 0.88) 65%),
     linear-gradient(180deg, rgba(7, 21, 29, 0.85), rgba(4, 12, 18, 0.92));
   overflow: hidden;
 }
@@ -1094,23 +1162,34 @@ body.flow-title .title-hero {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(62vw, 330px);
+  width: min(82vw, 470px);
   aspect-ratio: 1 / 1;
   border-radius: 50%;
-  border: 2px solid rgba(155, 235, 224, 0.5);
+  border: 3px solid rgba(155, 235, 224, 0.56);
   transform: translate(-50%, -50%);
   box-shadow:
-    0 0 0 10px rgba(95, 184, 174, 0.09),
-    inset 0 0 28px rgba(47, 151, 191, 0.18);
+    0 0 0 14px rgba(95, 184, 174, 0.1),
+    inset 0 0 32px rgba(47, 151, 191, 0.22);
+}
+
+.title-hero__arena::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 52%, rgba(255, 236, 183, 0.14), transparent 24%),
+    repeating-radial-gradient(circle at 50% 52%, rgba(114, 220, 204, 0.08) 0 2px, transparent 2px 18px);
+  opacity: 0.55;
+  animation: arenaPulse 1500ms ease-in-out infinite;
 }
 
 .battle-top {
   position: absolute;
   top: 50%;
-  width: clamp(66px, 14vw, 92px);
-  height: clamp(66px, 14vw, 92px);
+  width: clamp(92px, 20vw, 146px);
+  height: clamp(92px, 20vw, 146px);
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.64);
+  border: 3px solid rgba(255, 255, 255, 0.72);
   display: grid;
   place-items: center;
   transform-style: preserve-3d;
@@ -1120,9 +1199,9 @@ body.flow-title .title-hero {
 .battle-top::before {
   content: '';
   position: absolute;
-  inset: 8px;
+  inset: 10px;
   border-radius: 50%;
-  border: 2px dashed rgba(255, 255, 255, 0.48);
+  border: 3px dashed rgba(255, 255, 255, 0.5);
 }
 
 .battle-top::after {
@@ -1131,25 +1210,25 @@ body.flow-title .title-hero {
   left: 50%;
   top: 108%;
   width: 76%;
-  height: 13px;
+  height: 15px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.4);
   transform: translateX(-50%);
-  filter: blur(2px);
+  filter: blur(3px);
 }
 
 .battle-top--left {
-  left: 27%;
+  left: 18%;
   background: radial-gradient(circle at 30% 26%, #67fff0, #049a8d 74%);
   transform: translate(-50%, -50%) rotate(0deg);
-  animation: topSpinLeft 900ms linear infinite, topCrash 1450ms ease-in-out infinite;
+  animation: topSpinLeft 650ms linear infinite, topCrash 1020ms cubic-bezier(0.24, 0.84, 0.32, 1) infinite;
 }
 
 .battle-top--right {
-  left: 73%;
+  left: 82%;
   background: radial-gradient(circle at 66% 22%, #ffd187, #ff7e3f 78%);
   transform: translate(-50%, -50%) rotate(0deg);
-  animation: topSpinRight 860ms linear infinite, topCrashMirror 1450ms ease-in-out infinite;
+  animation: topSpinRight 620ms linear infinite, topCrashMirror 1020ms cubic-bezier(0.24, 0.84, 0.32, 1) infinite;
 }
 
 .battle-top__ring {
@@ -1161,24 +1240,24 @@ body.flow-title .title-hero {
 
 .battle-top__core {
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 9px rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.76);
 }
 
 .title-impact {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: clamp(44px, 9vw, 62px);
-  height: clamp(44px, 9vw, 62px);
+  width: clamp(78px, 18vw, 130px);
+  height: clamp(78px, 18vw, 130px);
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 245, 189, 0.95), rgba(255, 169, 76, 0.2) 72%, transparent 74%);
-  filter: drop-shadow(0 0 10px rgba(255, 166, 76, 0.65));
-  animation: impactPulse 680ms ease-in-out infinite;
+  background: radial-gradient(circle, rgba(255, 245, 189, 0.98), rgba(255, 169, 76, 0.24) 72%, transparent 74%);
+  filter: drop-shadow(0 0 16px rgba(255, 166, 76, 0.8));
+  animation: impactPulse 560ms ease-in-out infinite;
   z-index: 3;
 }
 
@@ -1186,12 +1265,12 @@ body.flow-title .title-hero {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: clamp(52px, 10vw, 74px);
-  height: 2px;
+  width: clamp(94px, 20vw, 160px);
+  height: 3px;
   border-radius: 999px;
   transform-origin: center;
   background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 229, 150, 0.96), rgba(255, 255, 255, 0));
-  animation: impactLine 680ms ease-in-out infinite;
+  animation: impactLine 560ms ease-in-out infinite;
 }
 
 .impact-line--a {
@@ -1214,13 +1293,13 @@ body.flow-title .title-hero {
   z-index: 1;
   text-align: center;
   font-family: 'Chakra Petch', sans-serif;
-  letter-spacing: 0.16em;
-  font-size: clamp(0.86rem, 2.8vw, 1.02rem);
-  color: rgba(236, 248, 246, 0.95);
+  letter-spacing: 0.13em;
+  font-size: clamp(0.78rem, 2.4vw, 1rem);
+  color: rgba(246, 251, 250, 0.92);
 }
 
 .online-panel .mode-switch {
-  width: min(100%, 430px);
+  width: min(100%, 520px);
   grid-template-columns: 1fr;
   gap: 10px;
   margin: 0 auto;
@@ -1297,41 +1376,71 @@ body.flow-online-lobby .online-panel .campaign-info {
 
 @keyframes topCrash {
   0%, 100% {
-    left: 27%;
+    left: 18%;
   }
-  50% {
-    left: 42%;
+  46% {
+    left: 49%;
+  }
+  56% {
+    left: 44%;
   }
 }
 
 @keyframes topCrashMirror {
   0%, 100% {
-    left: 73%;
+    left: 82%;
   }
-  50% {
-    left: 58%;
+  46% {
+    left: 51%;
+  }
+  56% {
+    left: 56%;
   }
 }
 
 @keyframes impactPulse {
   0%, 100% {
-    transform: translate(-50%, -50%) scale(0.82);
-    opacity: 0.74;
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 0.7;
   }
-  45% {
-    transform: translate(-50%, -50%) scale(1.16);
+  40% {
+    transform: translate(-50%, -50%) scale(1.24);
+    opacity: 1;
+  }
+  62% {
+    transform: translate(-50%, -50%) scale(0.88);
     opacity: 1;
   }
 }
 
 @keyframes impactLine {
   0%, 100% {
-    opacity: 0.26;
+    opacity: 0.18;
     transform-origin: center;
   }
-  50% {
+  45% {
     opacity: 1;
-    width: clamp(74px, 15vw, 98px);
+    width: clamp(130px, 28vw, 210px);
+  }
+}
+
+@keyframes logoPulse {
+  0%, 100% {
+    transform: scale(0.98);
+    filter: brightness(1);
+  }
+  45% {
+    transform: scale(1.04);
+    filter: brightness(1.14);
+  }
+}
+
+@keyframes arenaPulse {
+  0%, 100% {
+    opacity: 0.38;
+  }
+  50% {
+    opacity: 0.8;
   }
 }
 
@@ -1425,10 +1534,12 @@ body.flow-online-lobby .online-panel .campaign-info {
   min-height: 0;
   border-radius: 0;
   border: 0;
+  display: grid;
+  place-items: center;
 }
 
 .arena-panel .controls-title-wrap--arena {
-  margin: 8px 10px 0;
+  display: none;
 }
 
 .arena-panel .rematch-actions {
