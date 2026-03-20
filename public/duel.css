@@ -619,7 +619,7 @@ h1 {
   backdrop-filter: blur(3px);
 }
 
-.touch-row--overlay {
+.touch-row.touch-row--overlay {
   margin-top: auto;
   margin-bottom: max(8px, env(safe-area-inset-bottom));
   align-self: stretch;
@@ -648,13 +648,13 @@ h1 {
   pointer-events: auto;
 }
 
-.touch-row--overlay.one-handed {
+.touch-row.touch-row--overlay.one-handed {
   grid-template-columns: 1fr;
   align-items: end;
   justify-items: center;
 }
 
-.touch-row--overlay.one-handed .touch-col.is-active {
+.touch-row.touch-row--overlay.one-handed .touch-col.is-active {
   grid-column: auto;
   justify-self: center;
   transform: none;
@@ -789,6 +789,12 @@ h1 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.touch-row.touch-row--overlay {
+  margin-top: auto;
+  margin-bottom: max(8px, env(safe-area-inset-bottom));
+  align-self: stretch;
 }
 
 .touch-col {

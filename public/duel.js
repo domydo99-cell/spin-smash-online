@@ -172,7 +172,7 @@ const STAGES = [
     id: 'neon',
     name: 'Neon Dome',
     desc: '標準バランスの円形ステージ',
-    arenaRadius: 338,
+    arenaRadius: 382,
     drag: 0.966,
     impactScale: 1,
     speedScale: 1,
@@ -189,7 +189,7 @@ const STAGES = [
     id: 'glacier',
     name: 'Glacier Ring',
     desc: '滑りやすく高速。制御が難しい',
-    arenaRadius: 323,
+    arenaRadius: 368,
     drag: 0.984,
     impactScale: 1.06,
     speedScale: 1.06,
@@ -206,7 +206,7 @@ const STAGES = [
     id: 'magma',
     name: 'Magma Pit',
     desc: '重い手触り。弾き飛ばしが強い',
-    arenaRadius: 353,
+    arenaRadius: 398,
     drag: 0.948,
     impactScale: 1.15,
     speedScale: 0.93,
@@ -1018,6 +1018,11 @@ function selectCharacter(index, charId, byUser = false) {
 
   refreshSelectionUi();
 
+  if (byUser) {
+    unlockAudio();
+    playSfx('menu');
+  }
+
   if (
     byUser
     && isOnlineMode()
@@ -1050,6 +1055,8 @@ function selectStage(stageId, byUser = false) {
   refreshSelectionUi();
 
   if (byUser) {
+    unlockAudio();
+    playSfx('menu');
     setArenaSetupOpen(false);
     resetMatch(true);
     emitSnapshotNow();
@@ -3591,15 +3598,27 @@ function stageBgmNotes() {
   return [220, 277, 330, 392, 330, 277, 247, 196];
 }
 
+function titleBgmNotes() {
+  return [196, 247, 294, 392, 330, 294, 247, 220];
+}
+
 function startBgm() {
   if (!audio.ctx || audio.bgmTimer) return;
 
   audio.bgmTimer = setInterval(() => {
     if (!audio.ctx) return;
 
-    const notes = stageBgmNotes();
+    const inTitleScene = flowState.scene === FLOW_SCENES.title;
+    const notes = inTitleScene ? titleBgmNotes() : stageBgmNotes();
     const note = notes[audio.bgmStep % notes.length];
     audio.bgmStep += 1;
+
+    if (inTitleScene) {
+      playTone(note, 0.26, { type: 'triangle', gain: 0.028 });
+      playTone(note * 0.5, 0.22, { type: 'sine', gain: 0.014, when: 0.02 });
+      playTone(note * 2, 0.1, { type: 'square', gain: 0.01, when: 0.04 });
+      return;
+    }
 
     if (state.phase === 'playing' || state.phase === 'idle' || state.phase === 'match_over') {
       playTone(note, 0.2, { type: 'triangle', gain: 0.02 });
@@ -3635,6 +3654,12 @@ function playSfx(type) {
   if (type === 'start') {
     playTone(440, 0.07, { type: 'square', gain: 0.03 });
     playTone(660, 0.1, { type: 'triangle', gain: 0.026, when: 0.05 });
+    return;
+  }
+
+  if (type === 'menu') {
+    playTone(520, 0.05, { type: 'triangle', gain: 0.024 });
+    playTone(760, 0.09, { type: 'square', gain: 0.018, when: 0.03 });
     return;
   }
 
@@ -3967,22 +3992,27 @@ function bindUi() {
 
   modeLocalBtn.addEventListener('click', () => {
     unlockAudio();
+    playSfx('menu');
     beginModeFlow(PLAY_MODES.local);
   });
 
   modeOnlineBtn.addEventListener('click', () => {
     unlockAudio();
+    playSfx('menu');
     beginModeFlow(PLAY_MODES.online);
   });
 
   modeSingleBtn.addEventListener('click', () => {
     unlockAudio();
+    playSfx('menu');
     beginModeFlow(PLAY_MODES.single);
   });
 
   if (setupBackBtn) {
     setupBackBtn.addEventListener('click', () => {
       if (flowState.scene !== FLOW_SCENES.setup) return;
+      unlockAudio();
+      playSfx('menu');
       if (flowState.setupIndex > 0) {
         flowState.setupIndex -= 1;
         renderSetupStep();
@@ -4000,6 +4030,8 @@ function bindUi() {
   if (setupNextBtn) {
     setupNextBtn.addEventListener('click', () => {
       if (flowState.scene !== FLOW_SCENES.setup) return;
+      unlockAudio();
+      playSfx('menu');
 
       const steps = flowState.setupSteps;
       if (flowState.setupIndex < steps.length - 1) {
@@ -4175,7 +4207,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260320-9')
+    navigator.serviceWorker.register('sw.js?v=20260321-1')
       .then((registration) => registration.update())
       .catch(() => {});
   });
