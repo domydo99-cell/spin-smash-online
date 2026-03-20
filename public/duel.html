@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SPIN SMASH | Online Duel</title>
-  <link rel="preload" href="duel.css?v=20260321-1" as="style" />
-  <link rel="preload" href="duel.js?v=20260321-1" as="script" />
+  <link rel="preload" href="duel.css?v=20260321-2" as="style" />
+  <link rel="preload" href="duel.js?v=20260321-2" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="duel.css?v=20260321-1" />
+  <link rel="stylesheet" href="duel.css?v=20260321-2" />
 </head>
 <body class="flow-title">
   <main class="layout">
@@ -91,7 +91,7 @@
         <article class="center-card">
           <p id="roundText" class="round-text">ROUND 1</p>
           <p id="timerText" class="timer">45</p>
-          <p id="statusText" class="status">Startで開始</p>
+          <p id="statusText" class="status">画面タップで開始</p>
           <p id="setScoreText" class="set-score">先取2 | YOU 0 - 0 ENEMY</p>
         </article>
 
@@ -114,7 +114,6 @@
           <div id="connectionBanner" class="connection-banner is-hidden" aria-live="polite"></div>
           <div id="netBadge" class="net-badge is-hidden" aria-live="polite">NET --</div>
           <div class="arena-corner-actions">
-            <button id="startBtn" class="action-btn" type="button">Start</button>
             <button id="resetBtn" class="action-btn action-btn--ghost" type="button">Reset</button>
           </div>
 
@@ -187,6 +186,6 @@
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="duel.js?v=20260321-1"></script>
+  <script src="duel.js?v=20260321-2"></script>
 </body>
 </html>

@@ -556,6 +556,8 @@ const audio = {
   bgmStep: 0,
 };
 
+let audioUnlockPrimed = false;
+
 const uiState = {
   focusMode: false,
   activeItemSlot: null,
@@ -638,6 +640,7 @@ function setFlowScene(scene) {
   }
 
   if (scene === FLOW_SCENES.title) {
+    audio.bgmStep = 0;
     if (onlineControlsEl) onlineControlsEl.classList.add('is-hidden');
     setModeStatus('モードを選択してください');
     campaignInfoEl.textContent = 'SPIN SMASH';
@@ -1441,7 +1444,7 @@ function updateControlUi() {
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = 'p1';
     setControlHint('SINGLE | スティックのみで移動。敵をリングアウト');
-    startBtn.disabled = false;
+    if (startBtn) startBtn.disabled = false;
     resetBtn.disabled = false;
     updateItemButtons();
     refreshRematchUi();
@@ -1456,7 +1459,7 @@ function updateControlUi() {
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = null;
     setControlHint('LOCAL 2P | 操作はスティックのみ。倒した方向へ移動');
-    startBtn.disabled = false;
+    if (startBtn) startBtn.disabled = false;
     resetBtn.disabled = false;
     updateItemButtons();
     refreshRematchUi();
@@ -1471,7 +1474,7 @@ function updateControlUi() {
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = 'p1';
     setControlHint('ONLINE | ルーム作成または参加してください');
-    startBtn.disabled = true;
+    if (startBtn) startBtn.disabled = true;
     resetBtn.disabled = false;
     updateItemButtons();
     refreshRematchUi();
@@ -1486,7 +1489,7 @@ function updateControlUi() {
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = 'p1';
     setControlHint(`ONLINE HOST | ROOM: ${online.roomCode} | ENEMY ${getOnlineEnemyCount()}体`);
-    startBtn.disabled = state.phase === 'match_over' ? true : !online.peerReady;
+    if (startBtn) startBtn.disabled = state.phase === 'match_over' ? true : !online.peerReady;
     resetBtn.disabled = false;
   } else {
     touchColP1.classList.add('is-hidden');
@@ -1496,7 +1499,7 @@ function updateControlUi() {
     touchColP2.classList.add('is-active');
     uiState.activeItemSlot = getOnlineOwnRole();
     setControlHint(`ONLINE ${getOnlineOwnRole().toUpperCase()} | ROOM: ${online.roomCode} | ホストの開始待ち`);
-    startBtn.disabled = true;
+    if (startBtn) startBtn.disabled = true;
     resetBtn.disabled = true;
   }
 
@@ -1533,6 +1536,7 @@ function triggerItemUse(slotId) {
 }
 
 function updateStartButtonLabel() {
+  if (!startBtn) return;
   startBtn.disabled = false;
 
   if (isSingleMode() && state.single.pendingAdvance) {
@@ -1714,11 +1718,11 @@ function resetMatch(idle) {
   if (idle) {
     state.phase = 'idle';
     if (isSingleMode()) {
-      setStatus(`STAGE ${state.single.stageIndex + 1} | Startで開始`);
+      setStatus(`STAGE ${state.single.stageIndex + 1} | 画面タップで開始`);
     } else if (isOnlineMode() && !online.enabled) {
       setStatus('オンライン接続後に開始できます');
     } else {
-      setStatus('Startで開始');
+      setStatus('画面タップで開始');
     }
   } else {
     state.phase = 'playing';
@@ -3648,6 +3652,18 @@ function unlockAudio() {
   }
 }
 
+function primeAudioUnlockOnFirstGesture() {
+  if (audioUnlockPrimed) return;
+  audioUnlockPrimed = true;
+
+  const unlock = () => {
+    unlockAudio();
+  };
+
+  window.addEventListener('pointerdown', unlock, { once: true, passive: true });
+  window.addEventListener('keydown', unlock, { once: true });
+}
+
 function playSfx(type) {
   if (!audio.ctx) return;
 
@@ -3987,6 +4003,7 @@ function updateFrame(now) {
 updateFrame.lastTime = performance.now();
 
 function bindUi() {
+  primeAudioUnlockOnFirstGesture();
   bindPad(padP1, knobP1, touchState.p1);
   bindPad(padP2, knobP2, touchState.p2);
 
@@ -4107,10 +4124,12 @@ function bindUi() {
     });
   }
 
-  startBtn.addEventListener('click', () => {
-    unlockAudio();
-    startMatch();
-  });
+  if (startBtn) {
+    startBtn.addEventListener('click', () => {
+      unlockAudio();
+      startMatch();
+    });
+  }
 
   resetBtn.addEventListener('click', () => {
     unlockAudio();
@@ -4151,11 +4170,25 @@ function bindUi() {
   }
 
   canvas.addEventListener('pointerdown', (event) => {
-    if (!isSingleMode()) return;
-    if (!state.single.pendingAdvance) return;
-    event.preventDefault();
     unlockAudio();
-    advanceSingleByTap();
+
+    if (flowState.scene !== FLOW_SCENES.game) return;
+
+    if (advanceSingleByTap()) {
+      event.preventDefault();
+      return;
+    }
+
+    if (state.phase === 'idle') {
+      event.preventDefault();
+      startMatch();
+      return;
+    }
+
+    if (state.phase === 'match_over' && !isOnlineMode()) {
+      event.preventDefault();
+      startMatch();
+    }
   });
 
   window.addEventListener('keydown', (event) => {
@@ -4207,7 +4240,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-1')
+    navigator.serviceWorker.register('sw.js?v=20260321-2')
       .then((registration) => registration.update())
       .catch(() => {});
   });
