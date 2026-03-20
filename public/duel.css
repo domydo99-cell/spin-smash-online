@@ -250,17 +250,21 @@ body {
 }
 
 .stage-card {
-  min-height: 108px;
+  min-height: 98px;
+  display: grid;
+  gap: 6px;
+  align-content: start;
 }
 
 .stage-name {
   margin: 0;
   font-family: 'Chakra Petch', sans-serif;
-  font-size: 0.95rem;
+  font-size: 0.82rem;
+  line-height: 1.2;
 }
 
 .stage-mini {
-  margin: 6px 0;
+  margin: 0;
   width: 100%;
   height: 44px;
   border-radius: 10px;
@@ -311,6 +315,7 @@ body {
   margin: 0;
   font-size: 0.74rem;
   opacity: 0.9;
+  display: none;
 }
 
 .stage-preview {
@@ -334,13 +339,20 @@ body {
 
 .stage-preview-gimmick {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   opacity: 0.9;
+}
+
+.stage-preview-sample {
+  margin: 0;
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+  color: rgba(255, 223, 174, 0.95);
 }
 
 .stage-preview-arena {
   margin-top: 8px;
-  height: 86px;
+  height: 92px;
   border-radius: 10px;
   position: relative;
   overflow: hidden;
@@ -382,10 +394,22 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  z-index: 2;
+}
+
+.preview-gimmick::before,
+.preview-gimmick::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
 }
 
 .stage-preview--classic .stage-preview-arena {
   background: linear-gradient(135deg, #1a2433, #111824);
+}
+
+.stage-preview--classic .preview-gimmick {
+  background: radial-gradient(circle at 50% 50%, rgba(190, 218, 255, 0.12), transparent 62%);
 }
 
 .stage-preview--neon .stage-preview-arena {
@@ -394,9 +418,39 @@ body {
 
 .stage-preview--neon .preview-gimmick {
   background:
-    radial-gradient(circle at 20% 25%, rgba(95, 255, 228, 0.2), transparent 45%),
-    radial-gradient(circle at 80% 72%, rgba(255, 216, 128, 0.17), transparent 45%);
-  animation: previewPulse 1.4s ease-in-out infinite;
+    radial-gradient(circle at 50% 50%, rgba(255, 122, 82, 0.42) 0 7px, transparent 9px),
+    radial-gradient(circle at 50% 50%, rgba(116, 255, 234, 0.18), transparent 41%);
+}
+
+.stage-preview--neon .preview-ring {
+  animation: previewShockRing 1.75s ease-out infinite;
+}
+
+.stage-preview--neon .preview-gimmick::before {
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(122, 255, 233, 0.86);
+  transform: translate(-50%, -50%);
+  animation: previewShockExpand 1.75s ease-out infinite;
+}
+
+.stage-preview--neon .preview-gimmick::after {
+  content: 'SHOCK';
+  left: 50%;
+  top: 8px;
+  transform: translateX(-50%);
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 157, 113, 0.85);
+  background: rgba(42, 16, 10, 0.7);
+  color: rgba(255, 226, 180, 0.98);
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.56rem;
+  letter-spacing: 0.09em;
+  animation: previewWarningFlash 700ms steps(1, end) infinite;
 }
 
 .stage-preview--glacier .stage-preview-arena {
@@ -405,8 +459,33 @@ body {
 
 .stage-preview--glacier .preview-gimmick {
   background:
-    linear-gradient(120deg, transparent 18%, rgba(176, 223, 255, 0.3) 40%, transparent 62%);
-  animation: previewSlide 1.1s linear infinite;
+    radial-gradient(72px 34px at 30% 72%, rgba(160, 226, 255, 0.45), rgba(120, 182, 240, 0.12) 70%, transparent 74%),
+    radial-gradient(46px 24px at 74% 26%, rgba(180, 236, 255, 0.22), transparent 70%);
+}
+
+.stage-preview--glacier .preview-gimmick::before {
+  left: 17%;
+  top: 61%;
+  width: 44%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(230, 248, 255, 0.95), transparent);
+  transform: rotate(-16deg);
+  transform-origin: left center;
+  animation: previewCrackJolt 1.25s ease-in-out infinite;
+}
+
+.stage-preview--glacier .preview-gimmick::after {
+  content: 'ICE ZONE';
+  right: 8px;
+  top: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(171, 230, 255, 0.9);
+  background: rgba(8, 26, 38, 0.72);
+  color: rgba(209, 246, 255, 0.98);
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
 }
 
 .stage-preview--magma .stage-preview-arena {
@@ -415,9 +494,26 @@ body {
 
 .stage-preview--magma .preview-gimmick {
   background:
-    radial-gradient(circle at 52% 52%, rgba(255, 180, 116, 0.22), transparent 56%),
-    radial-gradient(circle at 34% 65%, rgba(255, 120, 80, 0.2), transparent 52%);
-  animation: previewPulseStrong 1s ease-in-out infinite;
+    radial-gradient(circle at 26% 72%, rgba(255, 126, 79, 0.48) 0 8px, transparent 10px),
+    radial-gradient(circle at 72% 30%, rgba(255, 126, 79, 0.48) 0 8px, transparent 10px),
+    radial-gradient(24px 44px at 26% 56%, rgba(255, 192, 132, 0.64), transparent 72%),
+    radial-gradient(24px 44px at 72% 14%, rgba(255, 192, 132, 0.64), transparent 72%);
+  animation: previewVentBurst 1.05s ease-in-out infinite;
+}
+
+.stage-preview--magma .preview-gimmick::after {
+  content: 'VENT BURST';
+  left: 50%;
+  bottom: 7px;
+  transform: translateX(-50%);
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 177, 124, 0.9);
+  background: rgba(47, 17, 8, 0.72);
+  color: rgba(255, 223, 188, 0.98);
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
 }
 
 .stage-preview--storm .stage-preview-arena {
@@ -425,9 +521,34 @@ body {
 }
 
 .stage-preview--storm .preview-gimmick {
-  background:
-    repeating-linear-gradient(120deg, rgba(146, 216, 255, 0.12) 0 6px, transparent 6px 18px);
-  animation: previewSlide 0.9s linear infinite;
+  background: repeating-linear-gradient(116deg, rgba(146, 216, 255, 0.2) 0 7px, transparent 7px 20px);
+  animation: previewWindFlow 0.7s linear infinite;
+}
+
+.stage-preview--storm .preview-gimmick::before {
+  content: '>>>';
+  top: 50%;
+  left: 8px;
+  transform: translateY(-50%);
+  color: rgba(213, 242, 255, 0.98);
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 1.04rem;
+  letter-spacing: 0.14em;
+  animation: previewArrowRun 0.86s linear infinite;
+}
+
+.stage-preview--storm .preview-gimmick::after {
+  content: 'WIND';
+  right: 8px;
+  top: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(161, 223, 255, 0.9);
+  background: rgba(5, 29, 40, 0.72);
+  color: rgba(222, 246, 255, 0.98);
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
 }
 
 .stage-preview--gravity .stage-preview-arena {
@@ -435,9 +556,35 @@ body {
 }
 
 .stage-preview--gravity .preview-gimmick {
-  background:
-    radial-gradient(circle at 50% 50%, rgba(218, 173, 255, 0.28), transparent 40%);
-  animation: previewPulse 1.1s ease-in-out infinite;
+  background: radial-gradient(circle at 50% 50%, rgba(218, 173, 255, 0.35), transparent 42%);
+  animation: previewGravityPulse 1.1s ease-in-out infinite;
+}
+
+.stage-preview--gravity .preview-gimmick::before {
+  left: 50%;
+  top: 50%;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2px dashed rgba(227, 202, 255, 0.82);
+  transform: translate(-50%, -50%);
+  animation: previewGravitySpin 1.9s linear infinite;
+}
+
+.stage-preview--gravity .preview-gimmick::after {
+  content: 'IN  /  OUT';
+  left: 50%;
+  top: 8px;
+  transform: translateX(-50%);
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(224, 189, 255, 0.92);
+  background: rgba(33, 18, 56, 0.72);
+  color: rgba(241, 225, 255, 0.98);
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+  animation: previewWarningFlash 1200ms steps(1, end) infinite;
 }
 
 .stage-preview--collapse .stage-preview-arena {
@@ -445,7 +592,27 @@ body {
 }
 
 .stage-preview--collapse .preview-ring {
-  animation: previewCollapse 2.2s ease-in-out infinite;
+  animation: previewCollapseStrong 2.05s ease-in-out infinite;
+}
+
+.stage-preview--collapse .preview-gimmick {
+  background: radial-gradient(circle at 50% 50%, transparent 37%, rgba(255, 108, 128, 0.22) 58%, rgba(21, 10, 12, 0.5) 77%);
+  animation: previewCollapseEdge 2.05s ease-in-out infinite;
+}
+
+.stage-preview--collapse .preview-gimmick::after {
+  content: 'RING SHRINK';
+  left: 50%;
+  bottom: 7px;
+  transform: translateX(-50%);
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 170, 181, 0.9);
+  background: rgba(49, 17, 24, 0.72);
+  color: rgba(255, 226, 233, 0.98);
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
 }
 
 @keyframes previewOrbitA {
@@ -477,6 +644,127 @@ body {
 @keyframes previewCollapse {
   0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.86; }
   50% { transform: translate(-50%, -50%) scale(0.78); opacity: 0.95; }
+}
+
+@keyframes previewShockRing {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.75;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1.16);
+    opacity: 0.98;
+  }
+}
+
+@keyframes previewShockExpand {
+  0% {
+    transform: translate(-50%, -50%) scale(0.45);
+    opacity: 1;
+  }
+  65% {
+    transform: translate(-50%, -50%) scale(5.4);
+    opacity: 0.12;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(6.2);
+    opacity: 0;
+  }
+}
+
+@keyframes previewWarningFlash {
+  0%, 45% {
+    opacity: 0.34;
+  }
+  46%, 100% {
+    opacity: 1;
+  }
+}
+
+@keyframes previewCrackJolt {
+  0%, 100% {
+    transform: rotate(-16deg) scaleX(0.86);
+    opacity: 0.44;
+  }
+  45% {
+    transform: rotate(-11deg) scaleX(1.24);
+    opacity: 0.98;
+  }
+}
+
+@keyframes previewVentBurst {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes previewWindFlow {
+  from {
+    transform: translateX(-34%);
+  }
+  to {
+    transform: translateX(34%);
+  }
+}
+
+@keyframes previewArrowRun {
+  0% {
+    transform: translateY(-50%) translateX(0);
+    opacity: 0.22;
+  }
+  50% {
+    transform: translateY(-50%) translateX(26px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50%) translateX(56px);
+    opacity: 0;
+  }
+}
+
+@keyframes previewGravityPulse {
+  0%, 100% {
+    opacity: 0.48;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.98;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes previewGravitySpin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes previewCollapseStrong {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.82;
+  }
+  52% {
+    transform: translate(-50%, -50%) scale(0.56);
+    opacity: 1;
+  }
+}
+
+@keyframes previewCollapseEdge {
+  0%, 100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .char-card {

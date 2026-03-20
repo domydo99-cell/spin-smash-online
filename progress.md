@@ -41,3 +41,99 @@ Original prompt: 説明とROUND1部分をゲーム画面の下へ移動し、FOC
 - 2026-03-20: 検証。
   - `node --check public/duel.js` OK
   - `npm run build` OK
+- 2026-03-20: 画面UI再配置（スマホ操作優先）。
+  - FocusボタンをUIから削除し、Start/Resetのみをゲーム画面右上（オーバーレイ）に移動。
+  - スティック行を下寄せ固定（`margin-top:auto`）に変更。接続バナー非表示時でも上に張り付かないよう調整。
+  - キャンバスを `width: min(100vw, 100dvh)` にして可能な限り拡大し、`arena-shell` を中央配置。
+  - 操作UI文言から Focus 表記を削除し、`focusBtn`/`controlHint` 欠損時のJS安全化を追加。
+  - キャッシュバスター更新: `duel.*` を `20260320-8`、SWを `spin-smash-shell-v5`。
+- 2026-03-20: 検証。
+  - `node --check public/duel.js` OK
+  - `npm run build` OK
+- 2026-03-20: タイトル画面演出を大型化。
+  - タイトルヒーローに大型ロゴ（`SPIN SMASH`）を追加し、2段ロゴ＋タグライン化。
+  - 衝突イラストを拡大（コマサイズ・リングサイズ・衝突エフェクトを強化）。
+  - ロゴ脈動/アリーナ脈動アニメを追加してインパクトを強化。
+  - キャッシュバスター更新: `duel.*` を `20260320-9`、SWを `spin-smash-shell-v6`。
+- 2026-03-20: 検証。
+  - `node --check public/duel.js` OK
+  - `npm run build` OK
+- 2026-03-21: モバイル操作性の再調整（優先バグ修正）。
+  - スティック行の上寄り不具合を修正: `.touch-row--overlay` の指定を高優先度化して、常に下側固定。
+  - ステージ表示を拡大: `arenaRadius` を全ステージで引き上げ（neon/glacier/magma）。
+  - タイトルBGMを追加: タイトルシーン専用ノート列でループ再生。
+  - メニュー選択SEを追加: モード選択、SetupのBack/Next、キャラ/ステージ選択で `menu` SFX を再生。
+  - キャッシュ更新: `duel.*` を `20260321-1`、SWを `spin-smash-shell-v7`。
+- 2026-03-21: 検証。
+  - `node --check public/duel.js` OK
+  - `npm run build` OK
+- 2026-03-21: Start操作フローをタップ起動へ変更。
+  - ゲーム画面右上の `Start` ボタンを削除（`Reset` のみ残す）。
+  - キャンバス `pointerdown` で `idle -> startMatch`、SINGLE待機進行は `advanceSingleByTap()` を優先。
+  - 初期待機ステータスを `画面タップで開始` に変更。
+- 2026-03-21: タイトルBGM起動性を改善。
+  - `primeAudioUnlockOnFirstGesture()` を追加し、最初の任意タップ/キーでAudioContextを解放。
+  - タイトルシーン遷移時に `audio.bgmStep` をリセット。
+- 2026-03-21: キャッシュ更新。
+  - `duel.*` を `20260321-2`、SWを `spin-smash-shell-v8` に更新。
+- 2026-03-21: 検証。
+  - `node --check public/duel.js` OK
+  - `npm run build` OK
+- 2026-03-21: SINGLE分岐 + Classicステージ + 開始カウントダウンを実装。
+  - STAGEに `Classic Arena` を追加し、デフォルト選択/フォールバックを `classic` に変更。
+  - SINGLEを `STORY` / `FREE BATTLE` に分離。
+  - タイトルに `STORY` / `FREE BATTLE` ボタンを追加し、SINGLE選択後に分岐してSETUPへ進行。
+  - FREE BATTLE用に「敵人数(1-3)」「敵スロット別キャラ選択」「ステージ選択」を追加。
+  - FREE BATTLEは敵2体以上でバトルロイヤル方式（非チーム）に変更。
+  - オンラインは3人以上の対戦時に公平配置のバトルロイヤル開始へ変更。
+  - 複数人戦の初期配置を等角度スポーン（公平な開始位置）へ変更。
+  - 試合開始を `Tap` 起動 + `3,2,1,Start!` カウントダウンに変更（host snapshot同期対応）。
+  - オーバーレイ文言を `Tapでバトル開始` に統一し、旧 `Startで...` 表記を除去。
+  - キャッシュ更新: `duel.*` を `20260321-3`、SWを `spin-smash-shell-v9` に更新。
+- 2026-03-21: 検証。
+  - `node --check public/duel.js` OK
+  - `node --check server.js` OK
+  - `npm run build` OK
+  - Playwrightクライアントは `playwright` 未導入のため実行不可（ERR_MODULE_NOT_FOUND）。
+- 2026-03-21: UI/視認性の追加改善（要望反映）。
+  - STAGEカード説明をギミック説明ベースへ更新（`GIMMICK:` 表記）。
+  - STAGE選択中にギミックのサンプル演出プレビュー（Classic/Neon/Glacier/Magma）を追加。
+  - 対戦中の自キャラ視認性を強化（`YOU` バッジ + 強調リング）。
+  - タイトル画面の `STORY/FREE BATTLE` は `SINGLE` 押下後にのみ表示する挙動へ変更。
+  - 対戦中オーバーレイ右上に `Title` ボタンを追加（オンライン中は退出してタイトルへ戻る）。
+  - キャッシュ更新: `duel.*` を `20260321-4`、SWを `spin-smash-shell-v10` に更新。
+- 2026-03-21: 検証。
+  - `node --check public/duel.js` OK
+  - `npm run build` OK
+  - Playwrightクライアントは `playwright` 未導入のため実行不可（ERR_MODULE_NOT_FOUND）。
+- 2026-03-21: STAGE選択UI/プレビュー演出を再調整（視認性改善）。
+  - STAGEカードの長文説明を削除し、カード内テキスト崩れを解消（詳細はプレビュー側に集約）。
+  - プレビュー見出しに `サンプル` 行を追加して、ギミックの要点を短文で表示。
+  - 各ステージのプレビュー演出を強化（Shock/ICE ZONE/VENT/WIND/IN-OUT/RING SHRINK を視覚化）。
+  - キャッシュ更新: `duel.*` を `20260321-7`、SWを `spin-smash-shell-v13` に更新。
+- 2026-03-21: 検証。
+  - `node --check public/duel.js` OK
+  - `npm run build` OK
+  - `develop-web-game` の Playwright クライアント実行は `playwright` パッケージ未導入で不可（ERR_MODULE_NOT_FOUND）。
+- 2026-03-21: ステージギミック大型アップデート（全案採用）。
+  - 新ステージ追加: `Storm Alley` / `Gravity Core` / `Collapse Ring`。
+  - 既存含むギミック実装:
+    - `Classic`: ギミックなし（標準）
+    - `Neon`: Shock Pulse（予告後に中心から衝撃波）
+    - `Glacier`: Break Ice（衝突で低摩擦ゾーン発生）
+    - `Magma`: Vent Burst（予告後に噴火ノックバック）
+    - `Storm`: Wind Shift（周期的な風向き変化）
+    - `Gravity`: Gravity Flip（吸引/斥力の周期切替）
+    - `Collapse`: 残り20秒からリング縮小
+  - `arenaRadiusCurrent` と `stageFx` を導入し、ステージ効果を描画/判定に反映。
+  - オンライン向けに `arenaRadiusCurrent` / `stageFx` をスナップショット同期。
+  - STAGEプレビュー/ミニカードを新ステージ分まで拡張。
+- 2026-03-21: STORYモード調整。
+  - 全7ステージで `Classic -> Neon -> Glacier -> Magma -> Storm -> Gravity -> Collapse` を順に体験できるように再編。
+  - 後半ほど敵のステータス/AIが強くなるよう再チューニング。
+- 2026-03-21: キャッシュ更新。
+  - `duel.*` を `20260321-5`、SWを `spin-smash-shell-v11` に更新。
+- 2026-03-21: 検証。
+  - `node --check public/duel.js` OK
+  - `npm run build` OK
+  - Playwrightクライアントは `playwright` 未導入のため実行不可（ERR_MODULE_NOT_FOUND）。

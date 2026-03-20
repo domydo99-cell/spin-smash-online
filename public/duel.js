@@ -26,6 +26,7 @@ const stageCardsEl = document.getElementById('stageCards');
 const stagePreviewEl = document.getElementById('stagePreview');
 const stagePreviewNameEl = document.getElementById('stagePreviewName');
 const stagePreviewGimmickEl = document.getElementById('stagePreviewGimmick');
+const stagePreviewSampleEl = document.getElementById('stagePreviewSample');
 const p1CharCardsEl = document.getElementById('p1CharCards');
 const p2CharCardsEl = document.getElementById('p2CharCards');
 
@@ -191,6 +192,7 @@ const STAGES = [
     name: 'Classic Arena',
     desc: 'ギミックなし。純粋な操作と読み合い',
     gimmick: 'なし（基準ステージ）',
+    previewSample: 'サンプル: ノーギミック。標準バトル',
     arenaRadius: 390,
     drag: 0.966,
     impactScale: 1,
@@ -209,6 +211,7 @@ const STAGES = [
     name: 'Neon Dome',
     desc: '周期的なショック波を見切る読み合い',
     gimmick: 'Shock Pulse（中心から衝撃波）',
+    previewSample: 'サンプル: 中央予告 -> 衝撃波が広がる',
     arenaRadius: 382,
     drag: 0.966,
     impactScale: 1,
@@ -227,6 +230,7 @@ const STAGES = [
     name: 'Glacier Ring',
     desc: '衝突で氷床が割れ、滑走ゾーンが生まれる',
     gimmick: 'Break Ice（低摩擦ゾーン）',
+    previewSample: 'サンプル: ひび割れ後に滑る氷床ゾーン発生',
     arenaRadius: 368,
     drag: 0.984,
     impactScale: 1.06,
@@ -245,6 +249,7 @@ const STAGES = [
     name: 'Magma Pit',
     desc: '噴出口の予告から吹き上げを避ける',
     gimmick: 'Vent Burst（噴火ノックバック）',
+    previewSample: 'サンプル: 噴出口の予告後にバースト',
     arenaRadius: 398,
     drag: 0.948,
     impactScale: 1.15,
@@ -263,6 +268,7 @@ const STAGES = [
     name: 'Storm Alley',
     desc: '風向きが定期変化し、移動と弾道が流される',
     gimmick: 'Wind Shift（周期的な横風）',
+    previewSample: 'サンプル: 矢印方向へ風が流れて押される',
     arenaRadius: 386,
     drag: 0.962,
     impactScale: 1.03,
@@ -281,6 +287,7 @@ const STAGES = [
     name: 'Gravity Core',
     desc: '吸引と斥力が切り替わり、軌道が変化する',
     gimmick: 'Gravity Flip（引力/斥力）',
+    previewSample: 'サンプル: IN/OUT が周期切替',
     arenaRadius: 382,
     drag: 0.968,
     impactScale: 1.05,
@@ -299,6 +306,7 @@ const STAGES = [
     name: 'Collapse Ring',
     desc: '終盤にリングが縮小し、決着が早まる',
     gimmick: 'Ring Collapse（残り20秒から縮小）',
+    previewSample: 'サンプル: 終盤でリングが縮小',
     arenaRadius: 394,
     drag: 0.962,
     impactScale: 1.08,
@@ -1384,7 +1392,6 @@ function renderStageCards() {
     card.innerHTML = `
       <p class="stage-name">${stage.name}</p>
       <div class="stage-mini ${stage.miniClass}"></div>
-      <p class="stage-desc">GIMMICK: ${stage.gimmick || stage.desc}</p>
     `;
 
     card.addEventListener('click', () => selectStage(stage.id, true));
@@ -1403,6 +1410,9 @@ function updateStagePreview() {
   }
   if (stagePreviewGimmickEl) {
     stagePreviewGimmickEl.textContent = `ギミック: ${stage.gimmick || stage.desc}`;
+  }
+  if (stagePreviewSampleEl) {
+    stagePreviewSampleEl.textContent = stage.previewSample || 'サンプル演出';
   }
 }
 
@@ -5335,7 +5345,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-6')
+    navigator.serviceWorker.register('sw.js?v=20260321-7')
       .then((registration) => registration.update())
       .catch(() => {});
   });
