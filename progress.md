@@ -67,6 +67,12 @@ Original prompt: 説明とROUND1部分をゲーム画面の下へ移動し、FOC
 - 2026-03-21: 検証。
   - `node --check public/duel.js` OK
   - `npm run build` OK
+- 2026-03-21: BOM威力を即死級に調整。
+  - 爆風の基礎ノックバックと直撃倍率を大幅に強化（直撃時はほぼリングアウト級）。
+  - `power` バフによるBOM軽減を弱め、DEF系の影響を受けにくい体感へ寄せた。
+  - 速度上限クランプで爆風が弱まる問題に対応: `knockbackGraceTimer / knockbackSpeedLimit` を追加し、被弾直後のみ高速度を維持。
+  - オンライン同期用に上記ノックバック状態をスナップショットに含めるよう更新。
+  - キャッシュ更新: `duel.*` を `20260321-9`、SWを `spin-smash-shell-v15` に更新。
 - 2026-03-21: Start操作フローをタップ起動へ変更。
   - ゲーム画面右上の `Start` ボタンを削除（`Reset` のみ残す）。
   - キャンバス `pointerdown` で `idle -> startMatch`、SINGLE待機進行は `advanceSingleByTap()` を優先。

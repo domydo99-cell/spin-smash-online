@@ -612,6 +612,8 @@ function createPlayer({ id, slot, team, controls = null, isBot = false }) {
     spinAngle: 0,
     freezeTimer: 0,
     freezeImmuneTimer: 0,
+    knockbackGraceTimer: 0,
+    knockbackSpeedLimit: 0,
     aimX: 1,
     aimY: 0,
     cooldownFire: 0,
@@ -2080,6 +2082,8 @@ function resetPlayer(player, x, y) {
   player.spinAngle = Math.random() * Math.PI * 2;
   player.freezeTimer = 0;
   player.freezeImmuneTimer = 0;
+  player.knockbackGraceTimer = 0;
+  player.knockbackSpeedLimit = 0;
   player.aimX = player.team === 'left' ? 1 : -1;
   player.aimY = 0;
   player.cooldownFire = 0;
@@ -2594,7 +2598,10 @@ function applyMovement(player, input, dt, target) {
   player.vy *= damp;
 
   const speed = Math.hypot(player.vx, player.vy);
-  const speedLimit = input.len > 0.2 ? maxSpeed * 1.7 : maxSpeed * 3.25;
+  let speedLimit = input.len > 0.2 ? maxSpeed * 1.7 : maxSpeed * 3.25;
+  if (player.knockbackGraceTimer > 0) {
+    speedLimit = Math.max(speedLimit, player.knockbackSpeedLimit || 0);
+  }
   if (speed > speedLimit) {
     const ratio = speedLimit / speed;
     player.vx *= ratio;
@@ -3100,12 +3107,15 @@ function explodeBomb(bomb) {
     const ny = dy / pushDirLen || Math.sin(player.spinAngle);
     const falloff = 1 - clamp((dist - player.radius) / Math.max(1, bomb.blastRadius), 0, 1);
     const powGuard = getBuffAmount(player, 'power');
-    const reduce = 1 - powGuard * 0.25;
-    const directHit = dist <= bomb.radius + player.radius * 0.95 ? 2.2 : 1;
-    const knock = 1020 * (0.64 + falloff * 1.72) * reduce * directHit;
+    const reduce = 1 - powGuard * 0.08;
+    const isDirectHit = dist <= bomb.radius + player.radius * 0.95;
+    const hitScale = isDirectHit ? 5.2 : 2.6;
+    const knock = 1480 * (0.8 + falloff * 2.3) * reduce * hitScale;
 
     player.vx += nx * knock;
     player.vy += ny * knock;
+    player.knockbackGraceTimer = Math.max(player.knockbackGraceTimer || 0, isDirectHit ? 0.44 : 0.32);
+    player.knockbackSpeedLimit = Math.max(player.knockbackSpeedLimit || 0, isDirectHit ? 6800 : 5200);
     hitCount += 1;
   });
 
@@ -3423,6 +3433,10 @@ function updateBuffTimers(player, dt) {
   });
 
   player.freezeImmuneTimer = Math.max(0, player.freezeImmuneTimer - dt);
+  player.knockbackGraceTimer = Math.max(0, (player.knockbackGraceTimer || 0) - dt);
+  if (player.knockbackGraceTimer <= 0) {
+    player.knockbackSpeedLimit = 0;
+  }
   const wasFrozen = player.freezeTimer > 0;
   player.freezeTimer = Math.max(0, player.freezeTimer - dt);
   if (wasFrozen && player.freezeTimer <= 0) {
@@ -3628,6 +3642,8 @@ function createSnapshot() {
       spinAngle: player.spinAngle,
       freezeTimer: player.freezeTimer,
       freezeImmuneTimer: player.freezeImmuneTimer,
+      knockbackGraceTimer: player.knockbackGraceTimer,
+      knockbackSpeedLimit: player.knockbackSpeedLimit,
       buffs: { ...player.buffs },
       consumables: { ...player.consumables },
       selectedConsumable: player.selectedConsumable,
@@ -3688,6 +3704,8 @@ function applySnapshot(snapshot) {
       local.spinAngle = Number(remote.spinAngle) || 0;
       local.freezeTimer = Number(remote.freezeTimer) || 0;
       local.freezeImmuneTimer = Number(remote.freezeImmuneTimer) || 0;
+      local.knockbackGraceTimer = Math.max(0, Number(remote.knockbackGraceTimer) || 0);
+      local.knockbackSpeedLimit = Math.max(0, Number(remote.knockbackSpeedLimit) || 0);
       local.buffs = {
         ...local.buffs,
         ...(remote.buffs || {}),
@@ -5349,7 +5367,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-8')
+    navigator.serviceWorker.register('sw.js?v=20260321-9')
       .then((registration) => registration.update())
       .catch(() => {});
   });
