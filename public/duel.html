@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SPIN SMASH | Online Duel</title>
-  <link rel="preload" href="duel.css?v=20260321-5" as="style" />
-  <link rel="preload" href="duel.js?v=20260321-5" as="script" />
+  <link rel="preload" href="duel.css?v=20260321-6" as="style" />
+  <link rel="preload" href="duel.js?v=20260321-6" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="duel.css?v=20260321-5" />
+  <link rel="stylesheet" href="duel.css?v=20260321-6" />
 </head>
 <body class="flow-title">
   <main class="layout">
@@ -170,7 +170,6 @@
       <div class="setup-body">
         <div id="stageChoiceBlock" class="choice-block">
           <h2>STAGE SELECT</h2>
-          <div id="stageCards" class="choice-grid choice-grid--stage"></div>
           <article id="stagePreview" class="stage-preview stage-preview--classic" aria-live="polite">
             <div class="stage-preview-head">
               <p id="stagePreviewName" class="stage-preview-name">Classic Arena</p>
@@ -183,6 +182,7 @@
               <i class="preview-gimmick"></i>
             </div>
           </article>
+          <div id="stageCards" class="choice-grid choice-grid--stage"></div>
         </div>
 
         <div id="p1ChoiceBlock" class="choice-block">
@@ -224,6 +224,6 @@
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="duel.js?v=20260321-5"></script>
+  <script src="duel.js?v=20260321-6"></script>
 </body>
 </html>

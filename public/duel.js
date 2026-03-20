@@ -5335,7 +5335,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-5')
+    navigator.serviceWorker.register('sw.js?v=20260321-6')
       .then((registration) => registration.update())
       .catch(() => {});
   });

@@ -1723,6 +1723,8 @@ body.flow-online-lobby .online-panel .campaign-info {
 
 .setup-panel.flow-managed .choice-block.is-flow-active {
   display: block;
+  min-height: 0;
+  height: 100%;
 }
 
 .setup-panel .choice-grid,
@@ -1731,9 +1733,30 @@ body.flow-online-lobby .online-panel .campaign-info {
   gap: 8px;
 }
 
+.setup-panel #stageChoiceBlock.is-flow-active {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 8px;
+}
+
+.setup-panel #stageChoiceBlock .stage-preview {
+  margin-top: 0;
+}
+
+.setup-panel #stageChoiceBlock .choice-grid--stage {
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
 .setup-panel .stage-card,
 .setup-panel .char-card {
   min-height: 0;
+}
+
+.setup-panel .stage-card {
+  min-height: 88px;
 }
 
 .setup-panel .char-card {
