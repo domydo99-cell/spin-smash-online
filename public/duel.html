@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SPIN SMASH | Online Duel</title>
-  <link rel="preload" href="duel.css?v=20260321-2" as="style" />
-  <link rel="preload" href="duel.js?v=20260321-2" as="script" />
+  <link rel="preload" href="duel.css?v=20260321-3" as="style" />
+  <link rel="preload" href="duel.js?v=20260321-3" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="duel.css?v=20260321-2" />
+  <link rel="stylesheet" href="duel.css?v=20260321-3" />
 </head>
 <body class="flow-title">
   <main class="layout">
@@ -42,6 +42,11 @@
         <button id="modeSingleBtn" class="mode-btn is-active" type="button">SINGLE</button>
         <button id="modeOnlineBtn" class="mode-btn" type="button">ONLINE</button>
         <button id="modeLocalBtn" class="mode-btn" type="button">LOCAL 2P</button>
+      </div>
+
+      <div id="singleModeChoice" class="single-mode-choice is-hidden" aria-label="SINGLEモード詳細">
+        <button id="singleStoryBtn" class="mode-btn mode-btn--sub is-active" type="button">STORY</button>
+        <button id="singleFreeBtn" class="mode-btn mode-btn--sub" type="button">FREE BATTLE</button>
       </div>
 
       <div id="onlineControls" class="online-controls">
@@ -172,6 +177,26 @@
           <div id="p1CharCards" class="choice-grid"></div>
         </div>
 
+        <div id="freeChoiceBlock" class="choice-block is-hidden">
+          <h2>FREE BATTLE SETTINGS</h2>
+          <div class="free-config">
+            <label class="field">
+              <span>対戦相手の数（最大3）</span>
+              <select id="freeEnemyCountSelect">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </label>
+            <div id="freeEnemySlotButtons" class="free-enemy-slot-row">
+              <button type="button" class="mini-btn free-enemy-slot is-active" data-free-slot="0">ENEMY 1</button>
+              <button type="button" class="mini-btn free-enemy-slot" data-free-slot="1">ENEMY 2</button>
+              <button type="button" class="mini-btn free-enemy-slot" data-free-slot="2">ENEMY 3</button>
+            </div>
+            <p id="freeEnemyHint" class="free-enemy-hint">ENEMY 1 のキャラクターを選択</p>
+          </div>
+        </div>
+
         <div id="p2ChoiceBlock" class="choice-block">
           <h2 id="p2CharTitle">P2 CHARACTER</h2>
           <div id="p2CharCards" class="choice-grid"></div>
@@ -186,6 +211,6 @@
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="duel.js?v=20260321-2"></script>
+  <script src="duel.js?v=20260321-3"></script>
 </body>
 </html>

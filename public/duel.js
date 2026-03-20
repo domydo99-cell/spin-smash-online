@@ -29,6 +29,9 @@ const p2CharCardsEl = document.getElementById('p2CharCards');
 const modeLocalBtn = document.getElementById('modeLocalBtn');
 const modeOnlineBtn = document.getElementById('modeOnlineBtn');
 const modeSingleBtn = document.getElementById('modeSingleBtn');
+const singleModeChoiceEl = document.getElementById('singleModeChoice');
+const singleStoryBtn = document.getElementById('singleStoryBtn');
+const singleFreeBtn = document.getElementById('singleFreeBtn');
 
 const onlineControlsEl = document.getElementById('onlineControls');
 const playerNameInputEl = document.getElementById('playerNameInput');
@@ -47,7 +50,11 @@ const topPanelEl = document.getElementById('topPanel');
 const stageChoiceBlockEl = document.getElementById('stageChoiceBlock');
 const p1ChoiceBlockEl = document.getElementById('p1ChoiceBlock');
 const p2ChoiceBlockEl = document.getElementById('p2ChoiceBlock');
+const freeChoiceBlockEl = document.getElementById('freeChoiceBlock');
 const p2CharTitleEl = document.getElementById('p2CharTitle');
+const freeEnemyCountSelectEl = document.getElementById('freeEnemyCountSelect');
+const freeEnemySlotButtonsEl = document.getElementById('freeEnemySlotButtons');
+const freeEnemyHintEl = document.getElementById('freeEnemyHint');
 const ruleTextEl = document.getElementById('ruleText');
 const hintTextEl = document.getElementById('hintText');
 const setupTitleMainEl = document.getElementById('setupTitleMain');
@@ -97,6 +104,13 @@ const PLAY_MODES = {
   online: 'online',
   single: 'single',
 };
+
+const SINGLE_VARIANTS = {
+  story: 'story',
+  free: 'free',
+};
+
+const ROUND_COUNTDOWN_SECONDS = 3.9;
 
 const ONLINE_PLAYER_ROLES = ['p1', 'p2', 'p3', 'p4'];
 const ONLINE_GUEST_ROLES = ['p2', 'p3', 'p4'];
@@ -168,6 +182,23 @@ const CHARACTERS = [
 const CHARACTER_BY_ID = new Map(CHARACTERS.map((char) => [char.id, char]));
 
 const STAGES = [
+  {
+    id: 'classic',
+    name: 'Classic Arena',
+    desc: 'ギミックなし。基準になる標準ステージ',
+    arenaRadius: 390,
+    drag: 0.966,
+    impactScale: 1,
+    speedScale: 1,
+    projectileScale: 1,
+    itemSpawnMin: 2,
+    itemSpawnMax: 4,
+    bgTop: '#11171e',
+    bgBottom: '#090f16',
+    ringColor: 'rgba(221, 235, 255, 0.52)',
+    glowColor: 'rgba(149, 184, 255, %A%)',
+    miniClass: 'stage-mini--classic',
+  },
   {
     id: 'neon',
     name: 'Neon Dome',
@@ -516,12 +547,14 @@ const state = {
   round: 1,
   timer: CONFIG.roundSeconds,
   betweenTimer: 0,
-  stageId: 'neon',
-  stage: STAGE_BY_ID.get('neon'),
+  countdownTimer: 0,
+  stageId: 'classic',
+  stage: STAGE_BY_ID.get('classic'),
   ringPulse: 0,
-  status: 'Startで開始',
+  status: 'Tapでバトル開始',
   scoreLeft: 0,
   scoreRight: 0,
+  battleRoyale: false,
   activePlayers: [roster.p1, roster.p2],
   activePlayerIds: ['p1', 'p2'],
   itemTimer: 3,
@@ -536,16 +569,21 @@ const state = {
   shakePower: 0,
   lastCollisionSfxAt: 0,
   selection: {
-    stageId: 'neon',
+    stageId: 'classic',
     p1: 'blaze',
     p2: 'fort',
     p3: 'swift',
     p4: 'crusher',
   },
   single: {
+    variant: SINGLE_VARIANTS.story,
     stageIndex: 0,
     campaignComplete: false,
     pendingAdvance: null,
+    free: {
+      enemyCount: 1,
+      activeSlot: 0,
+    },
   },
 };
 
@@ -573,7 +611,7 @@ const FLOW_SCENES = {
 
 const flowState = {
   scene: FLOW_SCENES.title,
-  setupContext: 'single',
+  setupContext: 'single_story',
   setupSteps: [],
   setupIndex: 0,
 };
@@ -591,6 +629,39 @@ function isSingleMode() {
 
 function isOnlineMode() {
   return state.playMode === PLAY_MODES.online;
+}
+
+function isSingleStoryMode() {
+  return isSingleMode() && state.single.variant === SINGLE_VARIANTS.story;
+}
+
+function isSingleFreeMode() {
+  return isSingleMode() && state.single.variant === SINGLE_VARIANTS.free;
+}
+
+function getFreeEnemyRoleBySlot(slotIndex) {
+  if (slotIndex === 0) return 'p2';
+  if (slotIndex === 1) return 'p3';
+  return 'p4';
+}
+
+function getFreeEnemyCount() {
+  return clamp(Number(state.single.free.enemyCount) || 1, 1, 3);
+}
+
+function getFreeEnemyRoles() {
+  const count = getFreeEnemyCount();
+  return Array.from({ length: count }, (_, index) => getFreeEnemyRoleBySlot(index));
+}
+
+function shouldUseBattleRoyale() {
+  if (isOnlineMode()) {
+    return state.activePlayers.length >= 3;
+  }
+  if (isSingleFreeMode()) {
+    return state.activePlayers.length >= 3;
+  }
+  return false;
 }
 
 function setStatus(text) {
@@ -642,8 +713,13 @@ function setFlowScene(scene) {
   if (scene === FLOW_SCENES.title) {
     audio.bgmStep = 0;
     if (onlineControlsEl) onlineControlsEl.classList.add('is-hidden');
-    setModeStatus('モードを選択してください');
-    campaignInfoEl.textContent = 'SPIN SMASH';
+    if (isSingleMode()) {
+      setModeStatus('SINGLE: STORY / FREE BATTLE を選択');
+      setCampaignInfoText();
+    } else {
+      setModeStatus('モードを選択してください');
+      campaignInfoEl.textContent = 'SPIN SMASH';
+    }
   } else if (scene === FLOW_SCENES.onlineLobby) {
     if (onlineControlsEl) onlineControlsEl.classList.remove('is-hidden');
     setModeStatus('オンライン | ルーム作成 or 参加コード入力');
@@ -657,8 +733,15 @@ function setFlowScene(scene) {
 }
 
 function setupStepsForContext(context) {
-  if (context === 'single') {
+  if (context === 'single_story') {
     return [{ key: 'p1', label: 'YOUR CHARACTER' }];
+  }
+  if (context === 'single_free') {
+    return [
+      { key: 'stage', label: 'STAGE SELECT' },
+      { key: 'p1', label: 'YOUR CHARACTER' },
+      { key: 'free', label: 'FREE BATTLE' },
+    ];
   }
   if (context === 'local') {
     return [
@@ -686,10 +769,15 @@ function renderSetupStep() {
 
   if (stageChoiceBlockEl) stageChoiceBlockEl.classList.toggle('is-flow-active', step.key === 'stage');
   if (p1ChoiceBlockEl) p1ChoiceBlockEl.classList.toggle('is-flow-active', step.key === 'p1');
-  if (p2ChoiceBlockEl) p2ChoiceBlockEl.classList.toggle('is-flow-active', step.key === 'p2');
+  if (p2ChoiceBlockEl) p2ChoiceBlockEl.classList.toggle('is-flow-active', step.key === 'p2' || step.key === 'free');
+  if (freeChoiceBlockEl) {
+    freeChoiceBlockEl.classList.toggle('is-hidden', flowState.setupContext !== 'single_free');
+    freeChoiceBlockEl.classList.toggle('is-flow-active', step.key === 'free');
+  }
 
   if (setupTitleMainEl) {
-    if (flowState.setupContext === 'single') setupTitleMainEl.textContent = 'SINGLE SETUP';
+    if (flowState.setupContext === 'single_story') setupTitleMainEl.textContent = 'STORY SETUP';
+    else if (flowState.setupContext === 'single_free') setupTitleMainEl.textContent = 'FREE BATTLE SETUP';
     else if (flowState.setupContext === 'local') setupTitleMainEl.textContent = 'LOCAL 2P SETUP';
     else setupTitleMainEl.textContent = 'ONLINE SETUP';
   }
@@ -705,13 +793,61 @@ function renderSetupStep() {
     setupNextBtn.textContent = index >= steps.length - 1 ? 'ゲームへ' : 'Next';
   }
 
-  if (p2CharTitleEl && step.key === 'p2') {
-    if (flowState.setupContext === 'online_guest') {
+  if (p2CharTitleEl && (step.key === 'p2' || step.key === 'free')) {
+    if (flowState.setupContext === 'single_free') {
+      p2CharTitleEl.textContent = `ENEMY ${state.single.free.activeSlot + 1} CHARACTER`;
+    } else if (flowState.setupContext === 'online_guest') {
       p2CharTitleEl.textContent = `${getOnlineOwnRole().toUpperCase()} CHARACTER`;
     } else {
       p2CharTitleEl.textContent = 'P2 CHARACTER';
     }
   }
+
+  if (freeEnemyCountSelectEl) {
+    freeEnemyCountSelectEl.value = String(getFreeEnemyCount());
+  }
+  if (freeEnemyHintEl && flowState.setupContext === 'single_free') {
+    freeEnemyHintEl.textContent = `ENEMY ${state.single.free.activeSlot + 1} のキャラクターを選択`;
+  }
+  if (freeEnemySlotButtonsEl && flowState.setupContext === 'single_free') {
+    const count = getFreeEnemyCount();
+    freeEnemySlotButtonsEl.querySelectorAll('[data-free-slot]').forEach((button) => {
+      const slot = clamp(Number(button.dataset.freeSlot), 0, 2);
+      button.disabled = slot >= count;
+      button.classList.toggle('is-active', slot === state.single.free.activeSlot);
+    });
+  }
+}
+
+function setSingleVariant(nextVariant, byUser = false) {
+  const variant = nextVariant === SINGLE_VARIANTS.free ? SINGLE_VARIANTS.free : SINGLE_VARIANTS.story;
+  state.single.variant = variant;
+  state.single.stageIndex = 0;
+  state.single.pendingAdvance = null;
+  state.single.campaignComplete = false;
+
+  if (variant === SINGLE_VARIANTS.story) {
+    const stage = getCampaignStage();
+    applyStage(stage.stageId);
+    setModeStatus('STORY | 全7ステージを勝ち抜け');
+  } else {
+    applyStage(state.selection.stageId);
+    setModeStatus('FREE BATTLE | 条件を自由に選んで対戦');
+  }
+
+  updateRuleText();
+  updateHintText();
+  setCampaignInfoText();
+  refreshSelectionUi();
+
+  if (byUser) {
+    unlockAudio();
+    playSfx('menu');
+  }
+}
+
+function beginSingleSetupFlow() {
+  beginSetupFlow(isSingleStoryMode() ? 'single_story' : 'single_free');
 }
 
 function beginSetupFlow(context) {
@@ -738,7 +874,9 @@ function beginModeFlow(mode) {
   }
 
   if (mode === PLAY_MODES.single) {
-    beginSetupFlow('single');
+    setFlowScene(FLOW_SCENES.title);
+    setModeStatus('SINGLE: STORY / FREE BATTLE を選択');
+    setCampaignInfoText();
     return;
   }
 
@@ -899,7 +1037,10 @@ function getSecondaryControlRole() {
 
 function getSelectionRoleByIndex(index) {
   if (index === 0) return 'p1';
-  if (isSingleMode()) return null;
+  if (isSingleMode()) {
+    if (!isSingleFreeMode()) return null;
+    return getFreeEnemyRoleBySlot(state.single.free.activeSlot);
+  }
   if (isOnlineMode() && online.enabled && !online.isHost) {
     return getOnlineOwnRole();
   }
@@ -982,7 +1123,7 @@ function applyEnemyTuning(player, enemyConfig, index) {
 }
 
 function applyStage(stageId) {
-  const next = STAGE_BY_ID.get(stageId) || STAGE_BY_ID.get('neon');
+  const next = STAGE_BY_ID.get(stageId) || STAGE_BY_ID.get('classic');
   state.stageId = next.id;
   state.stage = next;
   state.itemTimer = randomRange(next.itemSpawnMin, next.itemSpawnMax);
@@ -991,14 +1132,15 @@ function applyStage(stageId) {
 }
 
 function canEditStageSelection() {
-  if (isSingleMode()) return false;
+  if (isSingleStoryMode()) return false;
+  if (isSingleFreeMode()) return true;
   if (!isOnlineMode()) return true;
   if (!online.enabled) return true;
   return online.isHost;
 }
 
 function canEditCharacter(index) {
-  if (isSingleMode() && index === 1) return false;
+  if (isSingleMode() && index === 1) return isSingleFreeMode();
   if (!isOnlineMode()) return true;
   if (!online.enabled) return index === 0;
   if (online.isHost) return index === 0;
@@ -1129,6 +1271,11 @@ function renderCharacterCards(container, playerIndex) {
 
 function getEnemyRosterFromCampaign() {
   if (!isSingleMode()) return [roster.p2];
+  if (isSingleFreeMode()) {
+    const slots = ['p2', 'npcA', 'npcB'];
+    const count = getFreeEnemyCount();
+    return slots.slice(0, count).map((id) => roster[id]).filter(Boolean);
+  }
   const stage = getCampaignStage();
   if (!stage) return [roster.npcA];
   return stage.enemies.length > 1 ? [roster.npcA, roster.npcB] : [roster.npcA];
@@ -1141,7 +1288,7 @@ function syncNamePlates() {
   if (isSingleMode()) {
     const enemies = getEnemyRosterFromCampaign();
     if (enemies.length > 1) {
-      p2NameEl.textContent = 'ENEMY TEAM';
+      p2NameEl.textContent = isSingleFreeMode() ? `RIVALS x${enemies.length}` : 'ENEMY TEAM';
     } else {
       const enemy = enemies[0] || roster.npcA;
       p2NameEl.textContent = `${enemy.slot} | ${enemy.char.name}`;
@@ -1152,7 +1299,9 @@ function syncNamePlates() {
   if (isOnlineMode() && online.enabled) {
     const enemyCount = getOnlineEnemyCount();
     const humanRoles = getOnlineRemoteRoles();
-    if (enemyCount > 1) {
+    if (state.battleRoyale && enemyCount > 1) {
+      p2NameEl.textContent = `FIELD x${enemyCount}`;
+    } else if (enemyCount > 1) {
       p2NameEl.textContent = `ENEMY TEAM x${enemyCount}`;
     } else if (humanRoles.length === 1) {
       const enemy = roster[humanRoles[0]] || roster.p2;
@@ -1171,10 +1320,15 @@ function refreshSelectionUi() {
   modeLocalBtn.classList.toggle('is-active', state.playMode === PLAY_MODES.local);
   modeOnlineBtn.classList.toggle('is-active', state.playMode === PLAY_MODES.online);
   modeSingleBtn.classList.toggle('is-active', state.playMode === PLAY_MODES.single);
+  if (singleStoryBtn) singleStoryBtn.classList.toggle('is-active', isSingleStoryMode());
+  if (singleFreeBtn) singleFreeBtn.classList.toggle('is-active', isSingleFreeMode());
+
+  const showSingleChoice = isSingleMode() && flowState.scene === FLOW_SCENES.title;
+  if (singleModeChoiceEl) singleModeChoiceEl.classList.toggle('is-hidden', !showSingleChoice);
 
   const showOnlineControls = isOnlineMode() && flowState.scene === FLOW_SCENES.onlineLobby;
   onlineControlsEl.classList.toggle('is-hidden', !showOnlineControls);
-  p2ChoiceBlockEl.classList.toggle('is-hidden', isSingleMode());
+  p2ChoiceBlockEl.classList.toggle('is-hidden', isSingleStoryMode());
 
   document.querySelectorAll('[data-stage-id]').forEach((card) => {
     card.classList.toggle('is-selected', card.dataset.stageId === state.stageId);
@@ -1190,7 +1344,9 @@ function refreshSelectionUi() {
   });
 
   if (p2CharTitleEl) {
-    if (isSingleMode()) {
+    if (isSingleFreeMode()) {
+      p2CharTitleEl.textContent = 'ENEMY CHARACTER';
+    } else if (isSingleStoryMode()) {
       p2CharTitleEl.textContent = 'ENEMY CHARACTER';
     } else if (isOnlineMode()) {
       if (online.enabled && !online.isHost) {
@@ -1206,6 +1362,26 @@ function refreshSelectionUi() {
   if (npcCountSelectEl) {
     const canEditNpc = isOnlineMode() && (!online.enabled || online.isHost);
     npcCountSelectEl.disabled = !canEditNpc;
+  }
+
+  if (freeEnemyCountSelectEl) {
+    freeEnemyCountSelectEl.value = String(getFreeEnemyCount());
+  }
+  if (freeEnemySlotButtonsEl) {
+    const enemyCount = getFreeEnemyCount();
+    freeEnemySlotButtonsEl.querySelectorAll('[data-free-slot]').forEach((button) => {
+      const slot = clamp(Number(button.dataset.freeSlot), 0, 2);
+      button.disabled = slot >= enemyCount;
+      button.classList.toggle('is-active', slot === state.single.free.activeSlot);
+    });
+  }
+  if (freeEnemyHintEl && isSingleFreeMode()) {
+    const role = getFreeEnemyRoleBySlot(state.single.free.activeSlot);
+    const pickedId = state.selection[role];
+    const pickedChar = CHARACTER_BY_ID.get(pickedId);
+    freeEnemyHintEl.textContent = pickedChar
+      ? `ENEMY ${state.single.free.activeSlot + 1}: ${pickedChar.name}`
+      : `ENEMY ${state.single.free.activeSlot + 1} のキャラクターを選択`;
   }
 
   syncNamePlates();
@@ -1267,7 +1443,7 @@ function setActivePlayers(ids) {
   state.activePlayers = ids.map((id) => roster[id]).filter(Boolean);
 }
 
-function configureSingleEnemies() {
+function configureSingleStoryEnemies() {
   const stage = getCampaignStage();
   if (!stage) return;
 
@@ -1292,6 +1468,42 @@ function configureSingleEnemies() {
   } else {
     setActivePlayers(['p1', 'npcA']);
   }
+}
+
+function configureSingleFreeEnemies() {
+  const enemyRoles = getFreeEnemyRoles();
+  const enemySlots = ['p2', 'npcA', 'npcB'];
+  const activeIds = ['p1'];
+
+  enemyRoles.forEach((role, index) => {
+    const playerId = enemySlots[index];
+    const player = roster[playerId];
+    if (!player) return;
+
+    const pickedCharId = state.selection[role] || 'balance';
+    applyCharacter(player, pickedCharId);
+    player.isBot = true;
+    player.team = 'right';
+    player.slot = `CPU-${index + 1}`;
+    player.ai = {
+      aggression: 0.96 + index * 0.08,
+      edgeCare: 1.08 + index * 0.04,
+      strafe: 0.34 + index * 0.08,
+      jitter: 0.34 + index * 0.05,
+    };
+
+    activeIds.push(playerId);
+  });
+
+  setActivePlayers(activeIds);
+}
+
+function configureSingleEnemies() {
+  if (isSingleFreeMode()) {
+    configureSingleFreeEnemies();
+    return;
+  }
+  configureSingleStoryEnemies();
 }
 
 function configureOnlineLineup() {
@@ -1369,6 +1581,16 @@ function setCampaignInfoText() {
     return;
   }
 
+  if (isSingleFreeMode()) {
+    const enemyNames = getFreeEnemyRoles().map((role, index) => {
+      const charId = state.selection[role];
+      const char = CHARACTER_BY_ID.get(charId);
+      return `E${index + 1}:${char ? char.name : charId}`;
+    }).join(' / ');
+    campaignInfoEl.textContent = `FREE BATTLE | STAGE: ${state.stage.name} | ${enemyNames}`;
+    return;
+  }
+
   const stage = getCampaignStage();
   if (!stage) {
     campaignInfoEl.textContent = '-';
@@ -1390,8 +1612,13 @@ function getModeLabel() {
 }
 
 function updateRuleText() {
-  if (isSingleMode()) {
+  if (isSingleStoryMode()) {
     ruleTextEl.innerHTML = `全${CAMPAIGN_STAGES.length}ステージ | 各対戦 <strong>${CONFIG.pointsToWin}本先取</strong>`;
+    return;
+  }
+
+  if (isSingleFreeMode()) {
+    ruleTextEl.innerHTML = `FREE BATTLE | <strong>${CONFIG.pointsToWin}本先取</strong> | 敵最大3人`;
     return;
   }
 
@@ -1399,8 +1626,13 @@ function updateRuleText() {
 }
 
 function updateHintText() {
-  if (isSingleMode()) {
+  if (isSingleStoryMode()) {
     hintTextEl.textContent = 'PC操作: YOU = WASD / QでITEM';
+    return;
+  }
+
+  if (isSingleFreeMode()) {
+    hintTextEl.textContent = 'PC操作: YOU = WASD / QでITEM | FREEは敵数/キャラ/ステージを自由設定';
     return;
   }
 
@@ -1443,7 +1675,9 @@ function updateControlUi() {
     touchColP1.classList.add('is-active');
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = 'p1';
-    setControlHint('SINGLE | スティックのみで移動。敵をリングアウト');
+    setControlHint(isSingleStoryMode()
+      ? 'STORY | スティックのみで移動。敵をリングアウト'
+      : 'FREE BATTLE | スティックのみで移動。全員バトルロイヤル');
     if (startBtn) startBtn.disabled = false;
     resetBtn.disabled = false;
     updateItemButtons();
@@ -1620,9 +1854,16 @@ function switchMode(nextMode, initial = false) {
     clearReconnectSession();
     hideConnectionBanner();
     state.single.stageIndex = 0;
-    const stage = getCampaignStage();
-    applyStage(stage.stageId);
-    setModeStatus('1人プレイキャンペーン | 全7ステージ');
+    state.single.pendingAdvance = null;
+    state.single.campaignComplete = false;
+    if (isSingleStoryMode()) {
+      const stage = getCampaignStage();
+      applyStage(stage.stageId);
+      setModeStatus('STORY | 全7ステージを勝ち抜け');
+    } else {
+      applyStage(state.selection.stageId);
+      setModeStatus('FREE BATTLE | 条件を自由に選んで対戦');
+    }
     setCampaignInfoText();
   }
 
@@ -1673,14 +1914,44 @@ function placeTeam(teamPlayers, side) {
   });
 }
 
+function placeBattleRoyale(players) {
+  const total = players.length;
+  if (total === 0) return;
+
+  const ring = clamp(state.stage.arenaRadius * 0.56, 140, state.stage.arenaRadius - 116);
+  const angleOffset = -Math.PI * 0.5;
+
+  players.forEach((player, index) => {
+    const angle = angleOffset + ((Math.PI * 2) / total) * index;
+    const x = center.x + Math.cos(angle) * ring;
+    const y = center.y + Math.sin(angle) * ring;
+    resetPlayer(player, x, y);
+
+    const toCenterX = center.x - player.x;
+    const toCenterY = center.y - player.y;
+    const len = Math.hypot(toCenterX, toCenterY) || 1;
+    player.aimX = toCenterX / len;
+    player.aimY = toCenterY / len;
+  });
+}
+
 function resetRound() {
   configureLineupForMode();
 
-  const leftTeam = state.activePlayers.filter((player) => player.team === 'left');
-  const rightTeam = state.activePlayers.filter((player) => player.team === 'right');
+  state.battleRoyale = shouldUseBattleRoyale();
 
-  placeTeam(leftTeam, 'left');
-  placeTeam(rightTeam, 'right');
+  if (state.battleRoyale) {
+    state.activePlayers.forEach((player) => {
+      player.team = player.id;
+    });
+    placeBattleRoyale(state.activePlayers);
+  } else {
+    const leftTeam = state.activePlayers.filter((player) => player.team === 'left');
+    const rightTeam = state.activePlayers.filter((player) => player.team === 'right');
+
+    placeTeam(leftTeam, 'left');
+    placeTeam(rightTeam, 'right');
+  }
 
   state.timer = CONFIG.roundSeconds;
   state.item = null;
@@ -1701,15 +1972,26 @@ function resetScoresAndRound() {
   state.round = 1;
 }
 
+function beginRoundCountdown(startStatus) {
+  state.phase = 'countdown';
+  state.countdownTimer = ROUND_COUNTDOWN_SECONDS;
+  if (startStatus) {
+    setStatus(startStatus);
+  }
+}
+
 function resetMatch(idle) {
   state.single.pendingAdvance = null;
 
-  if (isSingleMode()) {
+  if (isSingleStoryMode()) {
     const stage = getCampaignStage();
     applyStage(stage.stageId);
     setCampaignInfoText();
   } else {
     applyStage(state.selection.stageId);
+    if (isSingleFreeMode()) {
+      setCampaignInfoText();
+    }
   }
 
   resetScoresAndRound();
@@ -1717,21 +1999,24 @@ function resetMatch(idle) {
 
   if (idle) {
     state.phase = 'idle';
-    if (isSingleMode()) {
-      setStatus(`STAGE ${state.single.stageIndex + 1} | 画面タップで開始`);
+    state.countdownTimer = 0;
+    if (isSingleStoryMode()) {
+      setStatus(`STAGE ${state.single.stageIndex + 1} | Tapで開始`);
+    } else if (isSingleFreeMode()) {
+      setStatus('FREE BATTLE | Tapでバトル開始');
     } else if (isOnlineMode() && !online.enabled) {
       setStatus('オンライン接続後に開始できます');
     } else {
-      setStatus('画面タップで開始');
+      setStatus('Tapでバトル開始');
     }
   } else {
-    state.phase = 'playing';
-    if (isSingleMode()) {
-      setStatus(`STAGE ${state.single.stageIndex + 1} 開始!`);
+    if (isSingleStoryMode()) {
+      beginRoundCountdown(`STAGE ${state.single.stageIndex + 1} | Ready...`);
+    } else if (isSingleFreeMode()) {
+      beginRoundCountdown('FREE BATTLE | Ready...');
     } else {
-      setStatus('ぶつかって相手をリング外へ');
+      beginRoundCountdown('Ready...');
     }
-    playSfx('start');
   }
 
   updateStartButtonLabel();
@@ -1780,14 +2065,27 @@ function nextRound() {
   state.single.pendingAdvance = null;
   state.round += 1;
   resetRound();
-  state.phase = 'playing';
-  setStatus('次ラウンド開始');
-  playSfx('start');
+  beginRoundCountdown(`ROUND ${state.round} | Ready...`);
   updateStartButtonLabel();
   emitSnapshotNow();
 }
 
 function handleSingleMatchResult(heroWon) {
+  if (isSingleFreeMode()) {
+    state.single.pendingAdvance = null;
+    state.phase = 'match_over';
+    playSfx('decide');
+    if (heroWon) {
+      playSfx('win');
+      setStatus('FREE BATTLE WIN! 画面タップで再戦');
+    } else {
+      setStatus('FREE BATTLE LOSE... 画面タップで再戦');
+    }
+    updateStartButtonLabel();
+    updateHud();
+    return;
+  }
+
   if (heroWon) {
     playSfx('decide');
     playSfx('win');
@@ -1826,9 +2124,15 @@ function handleSingleMatchResult(heroWon) {
 }
 
 function getRightTeamLabel() {
+  if (state.battleRoyale) return 'FIELD';
   if (isSingleMode()) return 'ENEMY';
   const hasExtraRight = state.activePlayers.some((player) => player.team === 'right' && player.id !== 'p2');
   return hasExtraRight ? 'ENEMY' : 'P2';
+}
+
+function getRoundWinnerTeam(player) {
+  if (!player) return null;
+  return player.id === 'p1' ? 'left' : 'right';
 }
 
 function endRound(winnerTeam, reason) {
@@ -2644,12 +2948,31 @@ function checkRingOut() {
   if (outPlayers.length === 0) return;
 
   outPlayers.forEach((player) => {
-    burstEffect(player.x, player.y, player.team === 'left' ? '#90fff0' : '#ffc18f');
+    burstEffect(player.x, player.y, player.id === 'p1' ? '#90fff0' : '#ffc18f');
   });
 
   const outIds = new Set(outPlayers.map((player) => player.id));
   state.activePlayers = state.activePlayers.filter((player) => !outIds.has(player.id));
   state.activePlayerIds = state.activePlayers.map((player) => player.id);
+
+  if (state.battleRoyale) {
+    if (state.activePlayers.length === 0) {
+      endRound(null, '同時リングアウト');
+      return;
+    }
+
+    if (state.activePlayers.length === 1) {
+      const winner = state.activePlayers[0];
+      const winnerTeam = getRoundWinnerTeam(winner);
+      endRound(winnerTeam, `${winner.slot} が勝利!`);
+      return;
+    }
+
+    const names = outPlayers.map((player) => player.slot).join(' / ');
+    setStatus(`${names} リングアウト!`);
+    playSfx('ringout');
+    return;
+  }
 
   const leftAlive = teamAliveCount('left');
   const rightAlive = teamAliveCount('right');
@@ -2687,6 +3010,34 @@ function getTeamBestDistance(team) {
 }
 
 function judgeByDistance() {
+  if (state.battleRoyale) {
+    if (state.activePlayers.length === 0) {
+      endRound(null, '時間切れ: 引き分け');
+      return;
+    }
+
+    const ranked = state.activePlayers
+      .map((player) => ({
+        player,
+        dist: Math.hypot(player.x - center.x, player.y - center.y),
+      }))
+      .sort((a, b) => a.dist - b.dist);
+
+    if (!ranked.length) {
+      endRound(null, '時間切れ: 引き分け');
+      return;
+    }
+
+    if (ranked.length > 1 && Math.abs(ranked[0].dist - ranked[1].dist) < 12) {
+      endRound(null, '時間切れ: 引き分け');
+      return;
+    }
+
+    const winner = ranked[0].player;
+    endRound(getRoundWinnerTeam(winner), `時間切れ判定: ${winner.slot} 勝利`);
+    return;
+  }
+
   const leftBest = getTeamBestDistance('left');
   const rightBest = getTeamBestDistance('right');
 
@@ -2755,8 +3106,10 @@ function createSnapshot() {
       p4: state.selection.p4,
     },
     phase: state.phase,
+    battleRoyale: state.battleRoyale,
     round: state.round,
     timer: state.timer,
+    countdownTimer: state.countdownTimer,
     status: state.status,
     scoreLeft: state.scoreLeft,
     scoreRight: state.scoreRight,
@@ -2854,8 +3207,10 @@ function applySnapshot(snapshot) {
   }
 
   state.phase = snapshot.phase || state.phase;
+  state.battleRoyale = Boolean(snapshot.battleRoyale);
   state.round = Number(snapshot.round) || state.round;
   state.timer = Number(snapshot.timer) || 0;
+  state.countdownTimer = Math.max(0, Number(snapshot.countdownTimer) || 0);
   state.status = snapshot.status || state.status;
   state.scoreLeft = Number(snapshot.scoreLeft) || 0;
   state.scoreRight = Number(snapshot.scoreRight) || 0;
@@ -2967,6 +3322,20 @@ function stepPlaying(dt) {
 function updateSimulation(dt) {
   if (state.phase === 'playing') {
     stepPlaying(dt);
+  } else if (state.phase === 'countdown') {
+    state.countdownTimer = Math.max(0, state.countdownTimer - dt);
+    if (state.countdownTimer <= 0) {
+      state.phase = 'playing';
+      if (isSingleStoryMode()) {
+        setStatus(`STAGE ${state.single.stageIndex + 1} 開始!`);
+      } else if (isSingleFreeMode()) {
+        setStatus('FREE BATTLE 開始!');
+      } else {
+        setStatus('ぶつかって相手をリング外へ');
+      }
+      playSfx('start');
+      emitSnapshotNow();
+    }
   } else if (state.phase === 'round_over') {
     if (isSingleMode() && state.single.pendingAdvance === 'round') {
       updateParticles(dt);
@@ -3310,14 +3679,34 @@ function drawOverlay() {
   ctx.textAlign = 'center';
   ctx.font = "42px 'Chakra Petch', sans-serif";
 
+  if (state.phase === 'countdown') {
+    const marker = Math.ceil(state.countdownTimer - 0.9);
+    const label = marker > 0 ? String(marker) : 'Start!';
+    const size = marker > 0 ? 110 : 84;
+    const color = marker > 0 ? '#f9f4df' : '#ffdd92';
+
+    ctx.font = `bold ${size}px 'Chakra Petch', sans-serif`;
+    ctx.fillStyle = color;
+    ctx.fillText(label, center.x, center.y + 14);
+    ctx.font = "20px 'Noto Sans JP', sans-serif";
+    ctx.fillStyle = 'rgba(240, 249, 247, 0.92)';
+    ctx.fillText('Tapでバトル開始', center.x, center.y + 80);
+    ctx.restore();
+    return;
+  }
+
   if (state.phase === 'idle') {
-    const title = isSingleMode() ? `SINGLE STAGE ${state.single.stageIndex + 1}` : `${getModeLabel()} BATTLE`;
+    const title = isSingleStoryMode()
+      ? `STORY STAGE ${state.single.stageIndex + 1}`
+      : isSingleFreeMode()
+        ? 'FREE BATTLE'
+        : `${getModeLabel()} BATTLE`;
     ctx.fillText(title, center.x, center.y - 20);
     ctx.font = "22px 'Noto Sans JP', sans-serif";
-    if (isSingleMode() && state.single.pendingAdvance === 'stage') {
+    if (isSingleStoryMode() && state.single.pendingAdvance === 'stage') {
       ctx.fillText('画面タップで次ステージ開始', center.x, center.y + 32);
     } else {
-      ctx.fillText('Startでバトル開始', center.x, center.y + 32);
+      ctx.fillText('Tapでバトル開始', center.x, center.y + 32);
     }
   }
 
@@ -3332,14 +3721,18 @@ function drawOverlay() {
   }
 
   if (state.phase === 'match_over') {
-    if (isSingleMode() && state.single.campaignComplete) {
+    if (isSingleStoryMode() && state.single.campaignComplete) {
       ctx.fillText('CAMPAIGN CLEAR', center.x, center.y - 20);
       ctx.font = "22px 'Noto Sans JP', sans-serif";
       ctx.fillText('Restart Campaignで1から再挑戦', center.x, center.y + 32);
-    } else if (isSingleMode()) {
+    } else if (isSingleStoryMode()) {
       ctx.fillText(`STAGE ${state.single.stageIndex + 1}`, center.x, center.y - 20);
       ctx.font = "22px 'Noto Sans JP', sans-serif";
       ctx.fillText('Retry Stageで再挑戦', center.x, center.y + 32);
+    } else if (isSingleFreeMode()) {
+      ctx.fillText('FREE BATTLE', center.x, center.y - 20);
+      ctx.font = "22px 'Noto Sans JP', sans-serif";
+      ctx.fillText('画面タップで再戦', center.x, center.y + 32);
     } else {
       const champ = state.scoreLeft > state.scoreRight ? 'P1' : getRightTeamLabel();
       ctx.fillText(`${champ} CHAMPION`, center.x, center.y - 20);
@@ -3476,7 +3869,11 @@ function updateHud() {
   roundEl.textContent = `ROUND ${state.round}`;
   statusEl.textContent = state.status;
   if (setScoreTextEl) {
-    if (isSingleMode()) {
+    if (state.battleRoyale && isSingleMode()) {
+      setScoreTextEl.textContent = `先取${CONFIG.pointsToWin} | YOU ${state.scoreLeft} - ${state.scoreRight} FIELD`;
+    } else if (state.battleRoyale) {
+      setScoreTextEl.textContent = `先取${CONFIG.pointsToWin} | P1 ${state.scoreLeft} - ${state.scoreRight} FIELD`;
+    } else if (isSingleMode()) {
       setScoreTextEl.textContent = `先取${CONFIG.pointsToWin} | YOU ${state.scoreLeft} - ${state.scoreRight} ENEMY`;
     } else if (isOnlineMode() && online.enabled && getOnlineEnemyCount() > 1) {
       setScoreTextEl.textContent = `先取${CONFIG.pointsToWin} | P1 ${state.scoreLeft} - ${state.scoreRight} ENEMY`;
@@ -3886,7 +4283,7 @@ function setupSocketHandlers() {
     }
 
     if (online.isHost) {
-      setModeStatus(`${role ? role.toUpperCase() : 'GUEST'}(${name || 'Player'}) が参加。Startで開始`);
+      setModeStatus(`${role ? role.toUpperCase() : 'GUEST'}(${name || 'Player'}) が参加。Tapで開始`);
     }
 
     updateControlUi();
@@ -4025,6 +4422,26 @@ function bindUi() {
     beginModeFlow(PLAY_MODES.single);
   });
 
+  if (singleStoryBtn) {
+    singleStoryBtn.addEventListener('click', () => {
+      if (!isSingleMode()) {
+        switchMode(PLAY_MODES.single);
+      }
+      setSingleVariant(SINGLE_VARIANTS.story, true);
+      beginSingleSetupFlow();
+    });
+  }
+
+  if (singleFreeBtn) {
+    singleFreeBtn.addEventListener('click', () => {
+      if (!isSingleMode()) {
+        switchMode(PLAY_MODES.single);
+      }
+      setSingleVariant(SINGLE_VARIANTS.free, true);
+      beginSingleSetupFlow();
+    });
+  }
+
   if (setupBackBtn) {
     setupBackBtn.addEventListener('click', () => {
       if (flowState.scene !== FLOW_SCENES.setup) return;
@@ -4121,6 +4538,33 @@ function bindUi() {
 
       refreshSelectionUi();
       updateControlUi();
+    });
+  }
+
+  if (freeEnemyCountSelectEl) {
+    freeEnemyCountSelectEl.addEventListener('change', () => {
+      const next = clamp(Number(freeEnemyCountSelectEl.value) || 1, 1, 3);
+      state.single.free.enemyCount = next;
+      state.single.free.activeSlot = clamp(state.single.free.activeSlot, 0, next - 1);
+      refreshSelectionUi();
+      renderSetupStep();
+      if (isSingleFreeMode()) {
+        resetMatch(true);
+      }
+    });
+  }
+
+  if (freeEnemySlotButtonsEl) {
+    freeEnemySlotButtonsEl.querySelectorAll('[data-free-slot]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const slot = clamp(Number(button.dataset.freeSlot), 0, 2);
+        if (slot >= getFreeEnemyCount()) return;
+        unlockAudio();
+        playSfx('menu');
+        state.single.free.activeSlot = slot;
+        refreshSelectionUi();
+        renderSetupStep();
+      });
     });
   }
 
@@ -4240,7 +4684,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-2')
+    navigator.serviceWorker.register('sw.js?v=20260321-3')
       .then((registration) => registration.update())
       .catch(() => {});
   });
@@ -4255,7 +4699,7 @@ function bootSelectionUi() {
   state.selection.p2 = 'fort';
   state.selection.p3 = 'swift';
   state.selection.p4 = 'crusher';
-  state.selection.stageId = 'neon';
+  state.selection.stageId = 'classic';
 
   applyCharacter(roster.p1, state.selection.p1);
   applyCharacter(roster.p2, state.selection.p2);
@@ -4263,6 +4707,9 @@ function bootSelectionUi() {
   applyCharacter(roster.p4, state.selection.p4);
   if (npcCountSelectEl) {
     npcCountSelectEl.value = String(sanitizeNpcCount(npcCountSelectEl.value));
+  }
+  if (freeEnemyCountSelectEl) {
+    freeEnemyCountSelectEl.value = String(getFreeEnemyCount());
   }
   applyStage(state.selection.stageId);
 
