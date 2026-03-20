@@ -4,16 +4,36 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SPIN SMASH | Online Duel</title>
-  <link rel="preload" href="duel.css" as="style" />
-  <link rel="preload" href="duel.js?v=20260320-4" as="script" />
+  <link rel="preload" href="duel.css?v=20260320-7" as="style" />
+  <link rel="preload" href="duel.js?v=20260320-7" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="duel.css" />
+  <link rel="stylesheet" href="duel.css?v=20260320-7" />
 </head>
-<body>
+<body class="flow-title">
   <main class="layout">
-    <section class="panel online-panel">
+    <section id="onlinePanel" class="panel online-panel is-flow-visible">
+      <div class="title-hero" aria-hidden="true">
+        <div class="title-hero__backdrop"></div>
+        <div class="title-hero__arena">
+          <div class="battle-top battle-top--left">
+            <i class="battle-top__ring"></i>
+            <i class="battle-top__core"></i>
+          </div>
+          <div class="battle-top battle-top--right">
+            <i class="battle-top__ring"></i>
+            <i class="battle-top__core"></i>
+          </div>
+          <div class="title-impact">
+            <span class="impact-line impact-line--a"></span>
+            <span class="impact-line impact-line--b"></span>
+            <span class="impact-line impact-line--c"></span>
+          </div>
+        </div>
+        <p class="title-hero__copy">SPIN TO CRASH</p>
+      </div>
+
       <div class="mode-switch" role="tablist" aria-label="モード選択">
         <button id="modeSingleBtn" class="mode-btn is-active" type="button">SINGLE</button>
         <button id="modeOnlineBtn" class="mode-btn" type="button">ONLINE</button>
@@ -52,7 +72,7 @@
       <p id="campaignInfo" class="campaign-info">-</p>
     </section>
 
-    <section class="panel top-panel">
+    <section id="topPanel" class="panel top-panel">
       <h1>SPIN SMASH</h1>
       <p class="subtitle">キャラを選び、アイテムで強化して相手をリングアウト</p>
 
@@ -82,7 +102,7 @@
       <p id="ruleText" class="rule">先に <strong>2本</strong> 先取で勝ち</p>
     </section>
 
-    <section class="panel arena-panel">
+    <section id="arenaPanel" class="panel arena-panel">
       <div class="arena-shell">
         <canvas id="gameCanvas" width="900" height="900" aria-label="対戦ゲーム画面"></canvas>
 
@@ -137,14 +157,19 @@
       </div>
     </section>
 
-    <section class="panel setup-panel">
-      <div class="choice-block">
-        <h2>STAGE SELECT</h2>
-        <div id="stageCards" class="choice-grid choice-grid--stage"></div>
+    <section id="setupPanel" class="panel setup-panel flow-managed">
+      <div class="setup-header">
+        <h2 id="setupTitleMain">SETUP</h2>
+        <p id="setupStepText" class="setup-step">STEP 1/1</p>
       </div>
 
-      <div class="duo-block">
-        <div class="choice-block">
+      <div class="setup-body">
+        <div id="stageChoiceBlock" class="choice-block">
+          <h2>STAGE SELECT</h2>
+          <div id="stageCards" class="choice-grid choice-grid--stage"></div>
+        </div>
+
+        <div id="p1ChoiceBlock" class="choice-block">
           <h2>P1 CHARACTER</h2>
           <div id="p1CharCards" class="choice-grid"></div>
         </div>
@@ -154,10 +179,15 @@
           <div id="p2CharCards" class="choice-grid"></div>
         </div>
       </div>
+
+      <div class="setup-actions">
+        <button id="setupBackBtn" class="action-btn action-btn--ghost" type="button">Back</button>
+        <button id="setupNextBtn" class="action-btn" type="button">Next</button>
+      </div>
     </section>
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="duel.js?v=20260320-4"></script>
+  <script src="duel.js?v=20260320-7"></script>
 </body>
 </html>

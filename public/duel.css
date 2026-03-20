@@ -788,8 +788,8 @@ h1 {
 }
 
 .touch-pad {
-  width: min(36vw, 180px);
-  height: min(36vw, 180px);
+  width: min(27vw, 126px);
+  height: min(27vw, 126px);
   border-radius: 50%;
   position: relative;
   border: 2px solid rgba(67, 229, 212, 0.75);
@@ -807,8 +807,8 @@ h1 {
 }
 
 .touch-knob {
-  width: 56px;
-  height: 56px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: rgba(67, 229, 212, 0.95);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
@@ -850,14 +850,14 @@ h1 {
   position: absolute;
   left: clamp(10px, 2vw, 20px);
   bottom: clamp(10px, 2vw, 22px);
-  width: min(28vw, 132px);
-  height: min(28vw, 132px);
-  border-radius: 24px;
+  width: min(22vw, 96px);
+  height: min(22vw, 96px);
+  border-radius: 18px;
   border: 2px solid rgba(255, 255, 255, 0.56);
   background: radial-gradient(circle at 30% 28%, rgba(255, 248, 206, 0.36), rgba(0, 0, 0, 0.66));
   color: #eef8f5;
   font-family: 'Chakra Petch', sans-serif;
-  font-size: clamp(0.86rem, 2.1vw, 1.04rem);
+  font-size: clamp(0.76rem, 1.9vw, 0.94rem);
   letter-spacing: 0.04em;
   line-height: 1.2;
   white-space: pre-line;
@@ -987,4 +987,459 @@ body.focus-mode .controls-title-wrap--arena {
     width: 100%;
     text-align: center;
   }
+}
+
+/* Fullscreen Scene Flow (no page scroll) */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  position: fixed;
+  inset: 0;
+}
+
+.layout {
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  min-height: 100svh;
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  display: block;
+}
+
+.panel {
+  position: absolute;
+  inset: 0;
+  display: none;
+  border-radius: 0;
+  border: 0;
+}
+
+.panel.is-flow-visible {
+  display: block;
+}
+
+.top-panel {
+  display: none !important;
+}
+
+.online-panel.is-flow-visible {
+  padding: clamp(16px, 4vw, 30px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  background:
+    radial-gradient(circle at 20% 16%, rgba(0, 199, 178, 0.2), transparent 46%),
+    radial-gradient(circle at 80% 20%, rgba(255, 136, 57, 0.18), transparent 44%),
+    #050f15;
+}
+
+body.flow-online-lobby .online-panel.is-flow-visible {
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.title-hero {
+  display: none;
+}
+
+body.flow-title .title-hero {
+  width: min(100%, 560px);
+  display: grid;
+  gap: 8px;
+  position: relative;
+  padding: 18px 16px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(145deg, rgba(3, 15, 23, 0.86), rgba(9, 32, 42, 0.74));
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.title-hero__backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 14% 24%, rgba(66, 229, 212, 0.24), transparent 36%),
+    radial-gradient(circle at 84% 22%, rgba(255, 186, 113, 0.23), transparent 38%),
+    radial-gradient(circle at 50% 82%, rgba(31, 123, 206, 0.2), transparent 45%);
+  filter: saturate(1.1);
+  pointer-events: none;
+}
+
+.title-hero__arena {
+  position: relative;
+  height: clamp(144px, 28vw, 186px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background:
+    radial-gradient(circle at center, rgba(82, 213, 204, 0.09), rgba(2, 8, 12, 0.84) 65%),
+    linear-gradient(180deg, rgba(7, 21, 29, 0.85), rgba(4, 12, 18, 0.92));
+  overflow: hidden;
+}
+
+.title-hero__arena::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(62vw, 330px);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  border: 2px solid rgba(155, 235, 224, 0.5);
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 0 0 10px rgba(95, 184, 174, 0.09),
+    inset 0 0 28px rgba(47, 151, 191, 0.18);
+}
+
+.battle-top {
+  position: absolute;
+  top: 50%;
+  width: clamp(66px, 14vw, 92px);
+  height: clamp(66px, 14vw, 92px);
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.64);
+  display: grid;
+  place-items: center;
+  transform-style: preserve-3d;
+  z-index: 2;
+}
+
+.battle-top::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.48);
+}
+
+.battle-top::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 108%;
+  width: 76%;
+  height: 13px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  transform: translateX(-50%);
+  filter: blur(2px);
+}
+
+.battle-top--left {
+  left: 27%;
+  background: radial-gradient(circle at 30% 26%, #67fff0, #049a8d 74%);
+  transform: translate(-50%, -50%) rotate(0deg);
+  animation: topSpinLeft 900ms linear infinite, topCrash 1450ms ease-in-out infinite;
+}
+
+.battle-top--right {
+  left: 73%;
+  background: radial-gradient(circle at 66% 22%, #ffd187, #ff7e3f 78%);
+  transform: translate(-50%, -50%) rotate(0deg);
+  animation: topSpinRight 860ms linear infinite, topCrashMirror 1450ms ease-in-out infinite;
+}
+
+.battle-top__ring {
+  width: 42%;
+  height: 42%;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+}
+
+.battle-top__core {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 9px rgba(255, 255, 255, 0.68);
+}
+
+.title-impact {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(44px, 9vw, 62px);
+  height: clamp(44px, 9vw, 62px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 245, 189, 0.95), rgba(255, 169, 76, 0.2) 72%, transparent 74%);
+  filter: drop-shadow(0 0 10px rgba(255, 166, 76, 0.65));
+  animation: impactPulse 680ms ease-in-out infinite;
+  z-index: 3;
+}
+
+.impact-line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(52px, 10vw, 74px);
+  height: 2px;
+  border-radius: 999px;
+  transform-origin: center;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 229, 150, 0.96), rgba(255, 255, 255, 0));
+  animation: impactLine 680ms ease-in-out infinite;
+}
+
+.impact-line--a {
+  transform: translate(-50%, -50%) rotate(20deg);
+}
+
+.impact-line--b {
+  transform: translate(-50%, -50%) rotate(95deg);
+  animation-delay: 70ms;
+}
+
+.impact-line--c {
+  transform: translate(-50%, -50%) rotate(150deg);
+  animation-delay: 130ms;
+}
+
+.title-hero__copy {
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  font-family: 'Chakra Petch', sans-serif;
+  letter-spacing: 0.16em;
+  font-size: clamp(0.86rem, 2.8vw, 1.02rem);
+  color: rgba(236, 248, 246, 0.95);
+}
+
+.online-panel .mode-switch {
+  width: min(100%, 430px);
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 0 auto;
+}
+
+.online-panel .mode-btn {
+  padding: 13px 12px;
+  font-size: 1.02rem;
+}
+
+.online-panel .mode-status,
+.online-panel .campaign-info {
+  text-align: center;
+}
+
+body.flow-title .online-controls {
+  display: none !important;
+}
+
+body.flow-title .online-panel .mode-switch {
+  margin-top: 6px;
+}
+
+body.flow-title .online-panel .mode-btn {
+  border-radius: 14px;
+  border: 1px solid rgba(199, 244, 235, 0.45);
+  background: linear-gradient(135deg, rgba(9, 41, 49, 0.86), rgba(6, 20, 26, 0.9));
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+}
+
+body.flow-title .online-panel .mode-btn.is-active {
+  border-color: rgba(255, 232, 175, 0.82);
+  box-shadow:
+    0 10px 20px rgba(0, 0, 0, 0.3),
+    inset 0 0 18px rgba(255, 191, 94, 0.18);
+}
+
+body.flow-title .online-panel .mode-status {
+  margin-top: 3px;
+  font-family: 'Chakra Petch', sans-serif;
+  letter-spacing: 0.08em;
+  font-size: 0.88rem;
+  color: rgba(223, 251, 244, 0.96);
+}
+
+body.flow-title .online-panel .campaign-info {
+  margin-top: 0;
+  font-family: 'Chakra Petch', sans-serif;
+  letter-spacing: 0.16em;
+  font-size: 0.8rem;
+  color: rgba(255, 212, 152, 0.94);
+}
+
+body.flow-online-lobby .online-panel .mode-switch {
+  width: 100%;
+}
+
+body.flow-online-lobby .online-panel .mode-status,
+body.flow-online-lobby .online-panel .campaign-info {
+  text-align: left;
+}
+
+@keyframes topSpinLeft {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes topSpinRight {
+  to {
+    transform: translate(-50%, -50%) rotate(-360deg);
+  }
+}
+
+@keyframes topCrash {
+  0%, 100% {
+    left: 27%;
+  }
+  50% {
+    left: 42%;
+  }
+}
+
+@keyframes topCrashMirror {
+  0%, 100% {
+    left: 73%;
+  }
+  50% {
+    left: 58%;
+  }
+}
+
+@keyframes impactPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.82);
+    opacity: 0.74;
+  }
+  45% {
+    transform: translate(-50%, -50%) scale(1.16);
+    opacity: 1;
+  }
+}
+
+@keyframes impactLine {
+  0%, 100% {
+    opacity: 0.26;
+    transform-origin: center;
+  }
+  50% {
+    opacity: 1;
+    width: clamp(74px, 15vw, 98px);
+  }
+}
+
+.setup-panel.is-flow-visible {
+  padding: 14px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 10px;
+}
+
+.setup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.setup-header h2 {
+  margin: 0;
+  font-family: 'Chakra Petch', sans-serif;
+  letter-spacing: 0.08em;
+  font-size: 1rem;
+}
+
+.setup-step {
+  margin: 0;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.78rem;
+  opacity: 0.9;
+}
+
+.setup-body {
+  min-height: 0;
+}
+
+.setup-panel.flow-managed .choice-block {
+  display: none;
+  margin: 0;
+}
+
+.setup-panel.flow-managed .choice-block.is-flow-active {
+  display: block;
+}
+
+.setup-panel .choice-grid,
+.setup-panel .choice-grid--stage {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.setup-panel .stage-card,
+.setup-panel .char-card {
+  min-height: 0;
+}
+
+.setup-panel .char-card {
+  padding: 7px;
+}
+
+.setup-panel .char-token {
+  width: 30px;
+  height: 30px;
+}
+
+.setup-panel .char-name {
+  font-size: 0.82rem;
+}
+
+.setup-panel .char-sub {
+  font-size: 0.66rem;
+}
+
+.setup-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.setup-actions .action-btn {
+  flex: 1;
+}
+
+.arena-panel.is-flow-visible {
+  display: flex;
+  flex-direction: column;
+  background: #040b0f;
+}
+
+.arena-panel .arena-shell {
+  flex: 1;
+  min-height: 0;
+  border-radius: 0;
+  border: 0;
+}
+
+.arena-panel .controls-title-wrap--arena {
+  margin: 8px 10px 0;
+}
+
+.arena-panel .rematch-actions {
+  margin: 8px 10px 0;
+}
+
+.arena-panel .hint--under,
+.arena-panel .item-guide {
+  display: none;
+}
+
+body.flow-game .arena-panel {
+  padding: 0;
 }

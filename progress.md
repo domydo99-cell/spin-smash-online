@@ -1,0 +1,43 @@
+Original prompt: 説明とROUND1部分をゲーム画面の下へ移動し、FOCUSモード前提で制限時間をゲーム画面内に表示、SINGLEモードでラウンド間/ステージ間を画面タップで進行できるようにする。
+
+- 2026-03-19: 着手。duel.html/duel.css/duel.js を調査し、初期表示順・HUD表示・SINGLE進行ロジックの改修方針を確定。
+- 2026-03-19: 実装。
+  - モバイル表示でパネル順を `ARENA -> TOP(説明/HUD) -> SETUP -> ONLINE` に変更して、初期スクロール距離を短縮。
+  - キャンバス内スコアボードに `TIME` を追加し、FOCUSモードでも残り時間が視認可能に。
+  - SINGLEモードに `pendingAdvance` を追加し、ラウンド間/ステージ間を画面タップ進行化。該当待機中はStartボタンを無効化。
+  - オーバーレイ文言を「画面タップで次へ」に更新。
+- 2026-03-19: 検証。
+  - `node --check public/duel.js` OK
+  - `npm run build` OK
+  - Playwrightクライアントは `playwright` パッケージ未導入で起動不可（ERR_MODULE_NOT_FOUND）。
+- 2026-03-20: 改修（優先3項目）。
+  - 再戦フロー: オンラインmatch_over時に `Rematch/Leave` ボタンを表示し、全員Readyで `duel_rematch_start` を発火して即次マッチへ。
+  - 通信品質表示: `duel_ping/duel_pong` によるRTT計測を追加し、キャンバス上に `NET xxms GOOD/FAIR/POOR` を表示。
+  - アイテム予告: 出現1秒前に予告リング/アイコンを表示してから実アイテム出現。
+  - 追加調整: NPCがMIS/BOMを状況判断で使用。アイテムボタンはアイコンのみ表示。
+- 2026-03-20: 検証。
+  - `node --check public/duel.js` OK
+  - `node --check server.js` OK
+  - `npm run build` OK
+- 2026-03-20: タイトル画面演出を強化。
+  - `onlinePanel` にタイトル専用ヒーローイラスト（駒2体の衝突＋火花アニメ）を追加。
+  - `body.flow-title` の時だけヒーロー表示、`flow-online-lobby` では非表示にしてルームUIを優先。
+  - タイトル/ロビーで `mode-switch` とステータステキストの配置を切替。
+- 2026-03-20: 検証。
+  - `node --check public/duel.js` OK
+  - `npm run build` OK
+  - Playwrightクライアントは `playwright` 未導入のため実行不可（ERR_MODULE_NOT_FOUND）。
+- 2026-03-20: 初期表示安定化（スクロール問題/タイトル未反映対策）。
+  - `duel.css/duel.js` のバージョンを `20260320-6` に更新し、キャッシュバスター適用。
+  - `sw.js` を `spin-smash-shell-v3` に更新し、新バージョン資産を事前キャッシュ。
+  - 初期HTMLを `body.flow-title` + `onlinePanel.is-flow-visible` にして、JS実行前でもタイトル画面が見えるよう改善。
+  - フロー遷移時に `keepViewportTop()` で `scrollTo(0,0)` を強制し、縦スクロール残留を防止。
+- 2026-03-20: スマホ体験向けに初期遷移と操作UIを再調整。
+  - ゲーム遷移時の自動Focusを廃止（意図しないFocus開始を防止）。
+  - `resetToTitleHome()` を追加し、起動時と `pageshow(persisted)` 時に必ずタイトル復帰。
+  - タッチスティック/クイックアイテムボタンを小型化して画面占有を抑制。
+  - タイトル画面のモードボタンをカード風に調整してアプリ風の見た目を強化。
+  - 資産バージョンを `20260320-7`、SWキャッシュを `v4` に更新。
+- 2026-03-20: 検証。
+  - `node --check public/duel.js` OK
+  - `npm run build` OK

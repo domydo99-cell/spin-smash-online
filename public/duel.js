@@ -39,11 +39,21 @@ const joinRoomBtn = document.getElementById('joinRoomBtn');
 const leaveRoomBtn = document.getElementById('leaveRoomBtn');
 const modeStatusEl = document.getElementById('modeStatus');
 const campaignInfoEl = document.getElementById('campaignInfo');
+const onlinePanelEl = document.getElementById('onlinePanel');
+const setupPanelEl = document.getElementById('setupPanel');
+const arenaPanelEl = document.getElementById('arenaPanel');
+const topPanelEl = document.getElementById('topPanel');
 
+const stageChoiceBlockEl = document.getElementById('stageChoiceBlock');
+const p1ChoiceBlockEl = document.getElementById('p1ChoiceBlock');
 const p2ChoiceBlockEl = document.getElementById('p2ChoiceBlock');
 const p2CharTitleEl = document.getElementById('p2CharTitle');
 const ruleTextEl = document.getElementById('ruleText');
 const hintTextEl = document.getElementById('hintText');
+const setupTitleMainEl = document.getElementById('setupTitleMain');
+const setupStepTextEl = document.getElementById('setupStepText');
+const setupBackBtn = document.getElementById('setupBackBtn');
+const setupNextBtn = document.getElementById('setupNextBtn');
 
 const startBtn = document.getElementById('startBtn');
 const resetBtn = document.getElementById('resetBtn');
@@ -552,6 +562,27 @@ const uiState = {
   setupPanelOpen: false,
 };
 
+const FLOW_SCENES = {
+  title: 'title',
+  onlineLobby: 'online_lobby',
+  setup: 'setup',
+  game: 'game',
+};
+
+const flowState = {
+  scene: FLOW_SCENES.title,
+  setupContext: 'single',
+  setupSteps: [],
+  setupIndex: 0,
+};
+
+function keepViewportTop() {
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  window.scrollTo(0, 0);
+}
+
 function isSingleMode() {
   return state.playMode === PLAY_MODES.single;
 }
@@ -578,6 +609,137 @@ function setArenaSetupOpen(open) {
   if (setupToggleBtn) {
     setupToggleBtn.textContent = next ? 'Close Select' : 'Select';
   }
+}
+
+function setFlowScene(scene) {
+  flowState.scene = scene;
+  keepViewportTop();
+
+  if (onlinePanelEl) {
+    onlinePanelEl.classList.toggle('is-flow-visible', scene === FLOW_SCENES.title || scene === FLOW_SCENES.onlineLobby);
+  }
+  if (setupPanelEl) {
+    setupPanelEl.classList.toggle('is-flow-visible', scene === FLOW_SCENES.setup);
+  }
+  if (arenaPanelEl) {
+    arenaPanelEl.classList.toggle('is-flow-visible', scene === FLOW_SCENES.game);
+  }
+  if (topPanelEl) {
+    topPanelEl.classList.remove('is-flow-visible');
+  }
+
+  document.body.classList.toggle('flow-title', scene === FLOW_SCENES.title);
+  document.body.classList.toggle('flow-online-lobby', scene === FLOW_SCENES.onlineLobby);
+  document.body.classList.toggle('flow-setup', scene === FLOW_SCENES.setup);
+  document.body.classList.toggle('flow-game', scene === FLOW_SCENES.game);
+
+  if (scene !== FLOW_SCENES.game && uiState.focusMode) {
+    setFocusMode(false);
+  }
+
+  if (scene === FLOW_SCENES.title) {
+    if (onlineControlsEl) onlineControlsEl.classList.add('is-hidden');
+    setModeStatus('モードを選択してください');
+    campaignInfoEl.textContent = 'SPIN SMASH';
+  } else if (scene === FLOW_SCENES.onlineLobby) {
+    if (onlineControlsEl) onlineControlsEl.classList.remove('is-hidden');
+    setModeStatus('オンライン | ルーム作成 or 参加コード入力');
+    campaignInfoEl.textContent = 'ルーム接続後にセレクトへ進みます';
+  }
+
+  refreshSelectionUi();
+  updateControlUi();
+  renderNetBadge();
+  refreshRematchUi();
+}
+
+function setupStepsForContext(context) {
+  if (context === 'single') {
+    return [{ key: 'p1', label: 'YOUR CHARACTER' }];
+  }
+  if (context === 'local') {
+    return [
+      { key: 'stage', label: 'STAGE SELECT' },
+      { key: 'p1', label: 'P1 CHARACTER' },
+      { key: 'p2', label: 'P2 CHARACTER' },
+    ];
+  }
+  if (context === 'online_host') {
+    return [
+      { key: 'stage', label: 'HOST STAGE SELECT' },
+      { key: 'p1', label: 'HOST CHARACTER' },
+    ];
+  }
+  return [{ key: 'p2', label: 'YOUR CHARACTER' }];
+}
+
+function renderSetupStep() {
+  const steps = flowState.setupSteps;
+  const index = clamp(flowState.setupIndex, 0, Math.max(steps.length - 1, 0));
+  flowState.setupIndex = index;
+  const step = steps[index];
+
+  if (!step) return;
+
+  if (stageChoiceBlockEl) stageChoiceBlockEl.classList.toggle('is-flow-active', step.key === 'stage');
+  if (p1ChoiceBlockEl) p1ChoiceBlockEl.classList.toggle('is-flow-active', step.key === 'p1');
+  if (p2ChoiceBlockEl) p2ChoiceBlockEl.classList.toggle('is-flow-active', step.key === 'p2');
+
+  if (setupTitleMainEl) {
+    if (flowState.setupContext === 'single') setupTitleMainEl.textContent = 'SINGLE SETUP';
+    else if (flowState.setupContext === 'local') setupTitleMainEl.textContent = 'LOCAL 2P SETUP';
+    else setupTitleMainEl.textContent = 'ONLINE SETUP';
+  }
+
+  if (setupStepTextEl) {
+    setupStepTextEl.textContent = `STEP ${index + 1}/${steps.length} | ${step.label}`;
+  }
+
+  if (setupBackBtn) {
+    setupBackBtn.textContent = index === 0 ? (flowState.setupContext.startsWith('online') ? 'Back Lobby' : 'Back Title') : 'Back';
+  }
+  if (setupNextBtn) {
+    setupNextBtn.textContent = index >= steps.length - 1 ? 'ゲームへ' : 'Next';
+  }
+
+  if (p2CharTitleEl && step.key === 'p2') {
+    if (flowState.setupContext === 'online_guest') {
+      p2CharTitleEl.textContent = `${getOnlineOwnRole().toUpperCase()} CHARACTER`;
+    } else {
+      p2CharTitleEl.textContent = 'P2 CHARACTER';
+    }
+  }
+}
+
+function beginSetupFlow(context) {
+  flowState.setupContext = context;
+  flowState.setupSteps = setupStepsForContext(context);
+  flowState.setupIndex = 0;
+  setFlowScene(FLOW_SCENES.setup);
+  renderSetupStep();
+}
+
+function enterGameScene() {
+  setFlowScene(FLOW_SCENES.game);
+  resetMatch(true);
+  resetStick(touchState.p1, knobP1);
+  resetStick(touchState.p2, knobP2);
+}
+
+function beginModeFlow(mode) {
+  switchMode(mode);
+
+  if (mode === PLAY_MODES.online) {
+    setFlowScene(FLOW_SCENES.onlineLobby);
+    return;
+  }
+
+  if (mode === PLAY_MODES.single) {
+    beginSetupFlow('single');
+    return;
+  }
+
+  beginSetupFlow('local');
 }
 
 function showConnectionBanner(text, onlineTone = false, pulsing = false) {
@@ -1000,7 +1162,8 @@ function refreshSelectionUi() {
   modeOnlineBtn.classList.toggle('is-active', state.playMode === PLAY_MODES.online);
   modeSingleBtn.classList.toggle('is-active', state.playMode === PLAY_MODES.single);
 
-  onlineControlsEl.classList.toggle('is-hidden', !isOnlineMode());
+  const showOnlineControls = isOnlineMode() && flowState.scene === FLOW_SCENES.onlineLobby;
+  onlineControlsEl.classList.toggle('is-hidden', !showOnlineControls);
   p2ChoiceBlockEl.classList.toggle('is-hidden', isSingleMode());
 
   document.querySelectorAll('[data-stage-id]').forEach((card) => {
@@ -1073,6 +1236,7 @@ function leaveOnlineFromUi(statusText = 'オンラインから退出しました
   updateControlUi();
   resetStick(touchState.p1, knobP1);
   resetStick(touchState.p2, knobP2);
+  setFlowScene(FLOW_SCENES.title);
 }
 
 function setRematchReady(nextReady, byUser = false) {
@@ -1242,6 +1406,16 @@ function setFocusMode(enabled) {
   uiState.focusMode = Boolean(enabled);
   document.body.classList.toggle('focus-mode', uiState.focusMode);
   focusBtn.textContent = uiState.focusMode ? 'Exit' : 'Focus';
+  keepViewportTop();
+}
+
+function resetToTitleHome() {
+  if (state.phase !== 'idle') {
+    resetMatch(true);
+  }
+  setFocusMode(false);
+  setFlowScene(FLOW_SCENES.title);
+  keepViewportTop();
 }
 
 function updateControlUi() {
@@ -3623,6 +3797,7 @@ function setupSocketHandlers() {
     }, 900);
 
     resetMatch(true);
+    beginSetupFlow(online.isHost ? 'online_host' : 'online_guest');
     refreshSelectionUi();
     updateControlUi();
     renderNetBadge();
@@ -3785,18 +3960,50 @@ function bindUi() {
 
   modeLocalBtn.addEventListener('click', () => {
     unlockAudio();
-    switchMode(PLAY_MODES.local);
+    beginModeFlow(PLAY_MODES.local);
   });
 
   modeOnlineBtn.addEventListener('click', () => {
     unlockAudio();
-    switchMode(PLAY_MODES.online);
+    beginModeFlow(PLAY_MODES.online);
   });
 
   modeSingleBtn.addEventListener('click', () => {
     unlockAudio();
-    switchMode(PLAY_MODES.single);
+    beginModeFlow(PLAY_MODES.single);
   });
+
+  if (setupBackBtn) {
+    setupBackBtn.addEventListener('click', () => {
+      if (flowState.scene !== FLOW_SCENES.setup) return;
+      if (flowState.setupIndex > 0) {
+        flowState.setupIndex -= 1;
+        renderSetupStep();
+        return;
+      }
+
+      if (flowState.setupContext.startsWith('online')) {
+        setFlowScene(FLOW_SCENES.onlineLobby);
+      } else {
+        setFlowScene(FLOW_SCENES.title);
+      }
+    });
+  }
+
+  if (setupNextBtn) {
+    setupNextBtn.addEventListener('click', () => {
+      if (flowState.scene !== FLOW_SCENES.setup) return;
+
+      const steps = flowState.setupSteps;
+      if (flowState.setupIndex < steps.length - 1) {
+        flowState.setupIndex += 1;
+        renderSetupStep();
+        return;
+      }
+
+      enterGameScene();
+    });
+  }
 
   createRoomBtn.addEventListener('click', () => {
     unlockAudio();
@@ -3959,7 +4166,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
+    navigator.serviceWorker.register('sw.js?v=20260320-7')
       .then((registration) => registration.update())
       .catch(() => {});
   });
@@ -3992,7 +4199,10 @@ bootSelectionUi();
 bindUi();
 setupSocketHandlers();
 switchMode(PLAY_MODES.single, true);
-updateControlUi();
-resetMatch(true);
+resetToTitleHome();
+window.addEventListener('pageshow', (event) => {
+  if (!event.persisted) return;
+  resetToTitleHome();
+});
 registerServiceWorker();
 requestAnimationFrame(updateFrame);
