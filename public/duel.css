@@ -2012,7 +2012,6 @@ body.flow-online-lobby .online-panel .campaign-info {
 .setup-panel.flow-managed .choice-block.is-flow-active {
   display: block;
   min-height: 0;
-  height: 100%;
 }
 
 .setup-panel .choice-grid,
@@ -2024,6 +2023,7 @@ body.flow-online-lobby .online-panel .campaign-info {
 .setup-panel #stageChoiceBlock.is-flow-active {
   display: grid;
   grid-template-rows: auto auto 1fr;
+  height: 100%;
   gap: 8px;
 }
 
@@ -2035,6 +2035,31 @@ body.flow-online-lobby .online-panel .campaign-info {
   align-content: start;
   min-height: 0;
   overflow-y: auto;
+  padding-right: 2px;
+}
+
+.setup-panel.is-free-step .setup-body {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+  min-height: 0;
+}
+
+.setup-panel.is-free-step #freeChoiceBlock.is-flow-active {
+  height: auto;
+}
+
+.setup-panel.is-free-step #p2ChoiceBlock.is-flow-active {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+  height: auto;
+}
+
+.setup-panel.is-free-step #p2ChoiceBlock .choice-grid {
+  min-height: 0;
+  overflow-y: auto;
+  align-content: start;
   padding-right: 2px;
 }
 

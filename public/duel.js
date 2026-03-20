@@ -916,6 +916,10 @@ function renderSetupStep() {
     freeChoiceBlockEl.classList.toggle('is-hidden', flowState.setupContext !== 'single_free');
     freeChoiceBlockEl.classList.toggle('is-flow-active', step.key === 'free');
   }
+  if (setupPanelEl) {
+    const isFreeStep = flowState.setupContext === 'single_free' && step.key === 'free';
+    setupPanelEl.classList.toggle('is-free-step', isFreeStep);
+  }
 
   if (setupTitleMainEl) {
     if (flowState.setupContext === 'single_story') setupTitleMainEl.textContent = 'STORY SETUP';
@@ -5345,7 +5349,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-7')
+    navigator.serviceWorker.register('sw.js?v=20260321-8')
       .then((registration) => registration.update())
       .catch(() => {});
   });

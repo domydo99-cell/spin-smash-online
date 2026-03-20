@@ -115,6 +115,14 @@ Original prompt: 説明とROUND1部分をゲーム画面の下へ移動し、FOC
   - `node --check public/duel.js` OK
   - `npm run build` OK
   - `develop-web-game` の Playwright クライアント実行は `playwright` パッケージ未導入で不可（ERR_MODULE_NOT_FOUND）。
+- 2026-03-21: FREE BATTLE セレクト表示バグを修正。
+  - 原因: `FREE` ステップで `freeChoiceBlock` と `p2ChoiceBlock` が同時表示される際、両ブロックに `height:100%` が効いて `p2` 側が下に押し出されていた。
+  - 対応: `setupPanel` に `is-free-step` クラスを導入し、FREE時のみ `setup-body` を2行グリッド（設定 + キャラ一覧）へ切替。
+  - `p2ChoiceBlock` の一覧を同画面内スクロールにして、敵キャラ選択を上部で完結できるよう調整。
+  - キャッシュ更新: `duel.*` を `20260321-8`、SWを `spin-smash-shell-v14` に更新。
+- 2026-03-21: 検証。
+  - `node --check public/duel.js` OK
+  - `npm run build` OK
 - 2026-03-21: ステージギミック大型アップデート（全案採用）。
   - 新ステージ追加: `Storm Alley` / `Gravity Core` / `Collapse Ring`。
   - 既存含むギミック実装:
