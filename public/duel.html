@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SPIN SMASH | Online Duel</title>
-  <link rel="preload" href="duel.css?v=20260321-14" as="style" />
-  <link rel="preload" href="duel.js?v=20260321-14" as="script" />
+  <link rel="preload" href="duel.css?v=20260322-1" as="style" />
+  <link rel="preload" href="duel.js?v=20260322-1" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="duel.css?v=20260321-14" />
+  <link rel="stylesheet" href="duel.css?v=20260322-1" />
 </head>
 <body class="flow-title">
   <main class="layout">
@@ -246,9 +246,24 @@
       <div class="guide-tabs" role="tablist" aria-label="説明タブ">
         <button id="guideTabTutorial" class="guide-tab is-active" type="button">チュートリアル</button>
         <button id="guideTabRules" class="guide-tab" type="button">ルール説明</button>
+        <button id="guideTabItems" class="guide-tab" type="button">アイテム</button>
+        <button id="guideTabStages" class="guide-tab" type="button">ステージ</button>
       </div>
 
       <div id="guidePanelTutorial" class="guide-panel is-active" aria-live="polite">
+        <article class="guide-live-preview" aria-label="ゲーム画面プレビュー">
+          <div class="guide-live-preview__arena">
+            <i class="guide-live-preview__ring"></i>
+            <i class="guide-live-preview__top guide-live-preview__top--you"></i>
+            <i class="guide-live-preview__top guide-live-preview__top--enemy"></i>
+            <i class="guide-live-preview__missile"></i>
+            <i class="guide-live-preview__item">🚀</i>
+            <i class="guide-live-preview__stick guide-live-preview__stick--left"></i>
+            <i class="guide-live-preview__stick guide-live-preview__stick--right"></i>
+          </div>
+          <p class="guide-live-preview__caption">実際のバトル画面イメージ: 左下スティックで移動し、アイテムで攻撃してリングアウトを狙う。</p>
+        </article>
+
         <div class="guide-card-grid">
           <article class="guide-card">
             <p class="guide-card__title">1. 移動</p>
@@ -290,6 +305,48 @@
         </div>
       </div>
 
+      <div id="guidePanelItems" class="guide-panel" aria-live="polite">
+        <div class="guide-card-grid">
+          <article class="guide-card">
+            <p class="guide-card__title">⚡ POW</p>
+            <p class="guide-card__text">攻撃・防御・速度が一定時間アップ。接触戦で押し勝ちやすくなります。</p>
+          </article>
+          <article class="guide-card">
+            <p class="guide-card__title">🔥 FIR / ❄ ICE</p>
+            <p class="guide-card__text">一定時間、弾を自動発射。FIRは強めの吹っ飛び、ICEは短時間の行動制限を狙えます。</p>
+          </article>
+          <article class="guide-card">
+            <p class="guide-card__title">🚀 MIS</p>
+            <p class="guide-card__text">任意発動で前方へミサイル。命中時に大きく吹っ飛ばせる直線攻撃です。</p>
+          </article>
+          <article class="guide-card">
+            <p class="guide-card__title">💣 BOM</p>
+            <p class="guide-card__text">任意発動で設置爆弾。直撃は即リングアウト級、爆風は周辺を大きく弾き飛ばします。</p>
+          </article>
+        </div>
+      </div>
+
+      <div id="guidePanelStages" class="guide-panel" aria-live="polite">
+        <div class="guide-card-grid">
+          <article class="guide-card">
+            <p class="guide-card__title">Classic</p>
+            <p class="guide-card__text">ギミックなし。基準となる操作感のステージです。</p>
+          </article>
+          <article class="guide-card">
+            <p class="guide-card__title">Neon / Glacier</p>
+            <p class="guide-card__text">Neonは衝撃波、Glacierは滑る氷床が発生。位置取りが重要。</p>
+          </article>
+          <article class="guide-card">
+            <p class="guide-card__title">Magma / Storm</p>
+            <p class="guide-card__text">Magmaは噴火ノックバック、Stormは風向き変化で軌道が流されます。</p>
+          </article>
+          <article class="guide-card">
+            <p class="guide-card__title">Gravity / Collapse</p>
+            <p class="guide-card__text">Gravityは吸引・斥力が切替、Collapseは終盤にリングが縮小します。</p>
+          </article>
+        </div>
+      </div>
+
       <div class="guide-modal__actions">
         <button id="guideSkipBtn" class="action-btn action-btn--ghost" type="button">スキップ</button>
         <button id="guideStartBtn" class="action-btn" type="button">OK</button>
@@ -298,6 +355,6 @@
   </section>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="duel.js?v=20260321-14"></script>
+  <script src="duel.js?v=20260322-1"></script>
 </body>
 </html>

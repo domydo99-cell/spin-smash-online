@@ -99,8 +99,12 @@ const guideSkipBtn = document.getElementById('guideSkipBtn');
 const guideStartBtn = document.getElementById('guideStartBtn');
 const guideTabTutorialBtn = document.getElementById('guideTabTutorial');
 const guideTabRulesBtn = document.getElementById('guideTabRules');
+const guideTabItemsBtn = document.getElementById('guideTabItems');
+const guideTabStagesBtn = document.getElementById('guideTabStages');
 const guidePanelTutorialEl = document.getElementById('guidePanelTutorial');
 const guidePanelRulesEl = document.getElementById('guidePanelRules');
+const guidePanelItemsEl = document.getElementById('guidePanelItems');
+const guidePanelStagesEl = document.getElementById('guidePanelStages');
 
 const CONFIG = {
   width: 900,
@@ -137,6 +141,8 @@ const STEER_ASSIST_STORAGE_KEY = 'spin_smash_steer_assist_v1';
 const GUIDE_TAB_IDS = {
   tutorial: 'tutorial',
   rules: 'rules',
+  items: 'items',
+  stages: 'stages',
 };
 
 const ONLINE_PLAYER_ROLES = ['p1', 'p2', 'p3', 'p4'];
@@ -2134,24 +2140,35 @@ function withAssistHint(text) {
 }
 
 function setGuideTab(tabId) {
-  const nextTab = tabId === GUIDE_TAB_IDS.rules ? GUIDE_TAB_IDS.rules : GUIDE_TAB_IDS.tutorial;
+  const tabButtons = {
+    [GUIDE_TAB_IDS.tutorial]: guideTabTutorialBtn,
+    [GUIDE_TAB_IDS.rules]: guideTabRulesBtn,
+    [GUIDE_TAB_IDS.items]: guideTabItemsBtn,
+    [GUIDE_TAB_IDS.stages]: guideTabStagesBtn,
+  };
+  const tabPanels = {
+    [GUIDE_TAB_IDS.tutorial]: guidePanelTutorialEl,
+    [GUIDE_TAB_IDS.rules]: guidePanelRulesEl,
+    [GUIDE_TAB_IDS.items]: guidePanelItemsEl,
+    [GUIDE_TAB_IDS.stages]: guidePanelStagesEl,
+  };
+
+  const nextTab = Object.prototype.hasOwnProperty.call(tabButtons, tabId)
+    ? tabId
+    : GUIDE_TAB_IDS.tutorial;
   uiState.guideTab = nextTab;
 
-  const tutorialActive = nextTab === GUIDE_TAB_IDS.tutorial;
-  if (guideTabTutorialBtn) {
-    guideTabTutorialBtn.classList.toggle('is-active', tutorialActive);
-    guideTabTutorialBtn.setAttribute('aria-selected', tutorialActive ? 'true' : 'false');
-  }
-  if (guideTabRulesBtn) {
-    guideTabRulesBtn.classList.toggle('is-active', !tutorialActive);
-    guideTabRulesBtn.setAttribute('aria-selected', tutorialActive ? 'false' : 'true');
-  }
-  if (guidePanelTutorialEl) {
-    guidePanelTutorialEl.classList.toggle('is-active', tutorialActive);
-  }
-  if (guidePanelRulesEl) {
-    guidePanelRulesEl.classList.toggle('is-active', !tutorialActive);
-  }
+  Object.entries(tabButtons).forEach(([key, buttonEl]) => {
+    if (!buttonEl) return;
+    const active = key === nextTab;
+    buttonEl.classList.toggle('is-active', active);
+    buttonEl.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+
+  Object.entries(tabPanels).forEach(([key, panelEl]) => {
+    if (!panelEl) return;
+    panelEl.classList.toggle('is-active', key === nextTab);
+  });
 }
 
 function setGuideOpen(open, tabId = null) {
@@ -3104,7 +3121,7 @@ function resolvePlayerCollision(a, b) {
 }
 
 function spawnBullet(owner, type) {
-  const speedBase = type === 'fire' ? 560 : type === 'ice' ? 520 : 430;
+  const speedBase = type === 'fire' ? 560 : type === 'ice' ? 520 : 500;
   const speed = speedBase * state.stage.projectileScale;
 
   state.bullets.push({
@@ -3432,7 +3449,7 @@ function applyBulletHit(bullet, target, owner) {
   if (bullet.type === 'missile') {
     const attackDrive = 0.94 + owner.attackMul * 0.95;
     const defenseScale = Math.max(0.95, 0.91 + target.defenseMul * 0.08);
-    const knock = (860 * attackDrive * state.stage.impactScale * reduce) / defenseScale;
+    const knock = (980 * attackDrive * state.stage.impactScale * reduce) / defenseScale;
     target.vx += dirX * knock;
     target.vy += dirY * knock;
     setStatus(`${target.slot} がミサイル被弾! 大きく吹き飛んだ`);
@@ -5560,21 +5577,19 @@ function bindUi() {
 
   setGuideTab(uiState.guideTab);
 
-  if (guideTabTutorialBtn) {
-    guideTabTutorialBtn.addEventListener('click', () => {
+  [
+    [guideTabTutorialBtn, GUIDE_TAB_IDS.tutorial],
+    [guideTabRulesBtn, GUIDE_TAB_IDS.rules],
+    [guideTabItemsBtn, GUIDE_TAB_IDS.items],
+    [guideTabStagesBtn, GUIDE_TAB_IDS.stages],
+  ].forEach(([buttonEl, tabId]) => {
+    if (!buttonEl) return;
+    buttonEl.addEventListener('click', () => {
       unlockAudio();
       playSfx('menu');
-      setGuideTab(GUIDE_TAB_IDS.tutorial);
+      setGuideTab(tabId);
     });
-  }
-
-  if (guideTabRulesBtn) {
-    guideTabRulesBtn.addEventListener('click', () => {
-      unlockAudio();
-      playSfx('menu');
-      setGuideTab(GUIDE_TAB_IDS.rules);
-    });
-  }
+  });
 
   bindPressAction(guideBtn, () => {
     unlockAudio();
@@ -5920,7 +5935,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-14')
+    navigator.serviceWorker.register('sw.js?v=20260322-1')
       .then((registration) => registration.update())
       .catch(() => {});
   });

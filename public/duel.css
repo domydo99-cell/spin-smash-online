@@ -1398,7 +1398,7 @@ body.guide-open {
 
 .guide-tabs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -1425,6 +1425,126 @@ body.guide-open {
 
 .guide-panel.is-active {
   display: block;
+}
+
+.guide-live-preview {
+  margin-bottom: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 13px;
+  background: rgba(0, 0, 0, 0.23);
+  padding: 10px;
+}
+
+.guide-live-preview__arena {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(0, 198, 179, 0.2), transparent 44%),
+    radial-gradient(circle at 78% 22%, rgba(255, 161, 84, 0.2), transparent 42%),
+    linear-gradient(160deg, #0d1f2a, #0a121c);
+}
+
+.guide-live-preview__ring {
+  position: absolute;
+  inset: 10% 19%;
+  border-radius: 999px;
+  border: 3px solid rgba(205, 232, 255, 0.74);
+  box-shadow: inset 0 0 32px rgba(120, 190, 255, 0.22);
+}
+
+.guide-live-preview__top {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.62);
+}
+
+.guide-live-preview__top--you {
+  left: 32%;
+  top: 56%;
+  background: radial-gradient(circle at 35% 28%, #b4ffe8, #21d4a4 63%, #0f664f);
+  box-shadow: 0 0 22px rgba(57, 229, 178, 0.32);
+  animation: guideTopYouMove 2.2s ease-in-out infinite;
+}
+
+.guide-live-preview__top--enemy {
+  left: 64%;
+  top: 40%;
+  background: radial-gradient(circle at 35% 28%, #ffd8b8, #ff9b51 63%, #7e3f10);
+  box-shadow: 0 0 20px rgba(255, 163, 84, 0.3);
+  animation: guideTopEnemyMove 2.2s ease-in-out infinite;
+}
+
+.guide-live-preview__missile {
+  position: absolute;
+  left: 37%;
+  top: 59%;
+  width: 46px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 240, 154, 0.04), rgba(255, 217, 88, 0.96));
+  filter: drop-shadow(0 0 8px rgba(255, 205, 82, 0.7));
+  transform-origin: left center;
+  animation: guideMissileFly 2.2s linear infinite;
+}
+
+.guide-live-preview__item {
+  position: absolute;
+  left: 50%;
+  top: 33%;
+  transform: translate(-50%, -50%);
+  font-size: 1.18rem;
+  filter: drop-shadow(0 0 8px rgba(255, 222, 129, 0.7));
+  animation: guideItemBob 1.2s ease-in-out infinite;
+}
+
+.guide-live-preview__stick {
+  position: absolute;
+  bottom: 10px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+}
+
+.guide-live-preview__stick::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  background: rgba(67, 229, 212, 0.9);
+  transform: translate(-50%, -50%);
+}
+
+.guide-live-preview__stick--left {
+  left: 14px;
+}
+
+.guide-live-preview__stick--left::after {
+  animation: guideStickMove 2.2s ease-in-out infinite;
+}
+
+.guide-live-preview__stick--right {
+  right: 14px;
+  opacity: 0.72;
+}
+
+.guide-live-preview__stick--right::after {
+  background: rgba(255, 181, 107, 0.92);
+}
+
+.guide-live-preview__caption {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: rgba(230, 245, 241, 0.95);
 }
 
 .guide-card-grid {
@@ -1460,6 +1580,51 @@ body.guide-open {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+@keyframes guideTopYouMove {
+  0%,
+  100% { transform: translate(0, 0); }
+  40% { transform: translate(18px, -9px); }
+  72% { transform: translate(6px, -2px); }
+}
+
+@keyframes guideTopEnemyMove {
+  0%,
+  100% { transform: translate(0, 0); }
+  38% { transform: translate(-10px, 6px); }
+  72% { transform: translate(-19px, 11px); }
+}
+
+@keyframes guideMissileFly {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scaleX(0.4);
+  }
+  24% {
+    opacity: 1;
+  }
+  72% {
+    opacity: 1;
+    transform: translate(170px, -68px) scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(190px, -76px) scaleX(0.6);
+  }
+}
+
+@keyframes guideStickMove {
+  0%,
+  100% { transform: translate(-50%, -50%); }
+  40% { transform: translate(-20%, -66%); }
+  72% { transform: translate(-30%, -58%); }
+}
+
+@keyframes guideItemBob {
+  0%,
+  100% { transform: translate(-50%, -50%); }
+  50% { transform: translate(-50%, -58%); }
 }
 
 .touch-row {
@@ -1695,6 +1860,10 @@ body.focus-mode .controls-title-wrap--arena {
 
   .guide-card-grid {
     grid-template-columns: 1fr;
+  }
+
+  .guide-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

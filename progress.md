@@ -146,6 +146,15 @@ Original prompt: 説明とROUND1部分をゲーム画面の下へ移動し、FOC
   - `node --check public/duel.js` OK
   - `npm run build` OK
   - `develop-web-game` の Playwrightクライアント実行は `playwright` パッケージ未導入のため不可（ERR_MODULE_NOT_FOUND）。
+- 2026-03-22: MIS強化 + 説明モーダル拡張。
+  - `MIS` を速度/吹っ飛びともに上方調整（弾速 430 -> 500, ノックバック係数 860 -> 980）。
+  - チュートリアルに「実ゲーム画面風」アニメーションプレビューを追加して視覚理解を強化。
+  - 説明タブを4つに拡張（`チュートリアル` / `ルール説明` / `アイテム` / `ステージ`）。
+  - キャッシュ更新: `duel.*` を `20260322-1`、SWを `spin-smash-shell-v21` に更新。
+- 2026-03-22: 検証。
+  - `node --check public/duel.js` OK
+  - `npm run build` OK
+  - `develop-web-game` の Playwrightクライアント実行は `playwright` パッケージ未導入のため不可（ERR_MODULE_NOT_FOUND）。
 - 2026-03-21: STAGE選択UI/プレビュー演出を再調整（視認性改善）。
   - STAGEカードの長文説明を削除し、カード内テキスト崩れを解消（詳細はプレビュー側に集約）。
   - プレビュー見出しに `サンプル` 行を追加して、ギミックの要点を短文で表示。
