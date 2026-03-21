@@ -504,6 +504,17 @@ function emptyRemoteInputs() {
   };
 }
 
+function createEmptyPlayerWins() {
+  return {
+    p1: 0,
+    p2: 0,
+    p3: 0,
+    p4: 0,
+    npcA: 0,
+    npcB: 0,
+  };
+}
+
 const online = {
   enabled: false,
   isHost: false,
@@ -749,6 +760,8 @@ const state = {
   status: 'Tapでバトル開始',
   scoreLeft: 0,
   scoreRight: 0,
+  playerWins: createEmptyPlayerWins(),
+  matchWinnerLabel: '',
   battleRoyale: false,
   activePlayers: [roster.p1, roster.p2],
   activePlayerIds: ['p1', 'p2'],
@@ -1740,6 +1753,69 @@ function setRematchReady(nextReady, byUser = false) {
 function setActivePlayers(ids) {
   state.activePlayerIds = ids.slice();
   state.activePlayers = ids.map((id) => roster[id]).filter(Boolean);
+  ensurePlayerWinsForActivePlayers();
+}
+
+function getPlayerWins(playerId) {
+  return Math.max(0, Number(state.playerWins?.[playerId]) || 0);
+}
+
+function ensurePlayerWinsForActivePlayers() {
+  if (!state.playerWins || typeof state.playerWins !== 'object') {
+    state.playerWins = createEmptyPlayerWins();
+  }
+  state.activePlayerIds.forEach((id) => {
+    if (!Number.isFinite(state.playerWins[id])) {
+      state.playerWins[id] = 0;
+    }
+  });
+  syncBattleRoyaleTeamScores();
+}
+
+function resetPlayerWins() {
+  state.playerWins = createEmptyPlayerWins();
+  state.activePlayerIds.forEach((id) => {
+    state.playerWins[id] = 0;
+  });
+  syncBattleRoyaleTeamScores();
+}
+
+function syncBattleRoyaleTeamScores() {
+  if (!state.battleRoyale) return;
+  state.scoreLeft = getPlayerWins('p1');
+  const rivalWins = state.activePlayers
+    .filter((player) => player.id !== 'p1')
+    .map((player) => getPlayerWins(player.id));
+  state.scoreRight = rivalWins.length ? Math.max(...rivalWins) : 0;
+}
+
+function getDisplayPlayerLabel(playerOrId) {
+  const player = typeof playerOrId === 'string' ? roster[playerOrId] : playerOrId;
+  if (!player) return 'UNKNOWN';
+  if (isSingleMode() && player.id === 'p1') return 'YOU';
+  return player.slot || player.id.toUpperCase();
+}
+
+function getBattleRoyaleScoreRows() {
+  return state.activePlayers
+    .map((player) => ({
+      id: player.id,
+      label: getDisplayPlayerLabel(player),
+      wins: getPlayerWins(player.id),
+      color: player.id === 'p1' ? 'rgba(61, 238, 212, 0.96)' : 'rgba(255, 182, 108, 0.96)',
+    }))
+    .sort((a, b) => b.wins - a.wins || a.label.localeCompare(b.label, 'ja'));
+}
+
+function getBattleRoyaleChampionId() {
+  const champion = state.activePlayers.find((player) => getPlayerWins(player.id) >= CONFIG.pointsToWin);
+  return champion ? champion.id : null;
+}
+
+function getBattleRoyaleScoreSummary() {
+  return getBattleRoyaleScoreRows()
+    .map((row) => `${row.label} ${row.wins}勝`)
+    .join(' | ');
 }
 
 function configureSingleStoryEnemies() {
@@ -2523,6 +2599,8 @@ function resetRound() {
 function resetScoresAndRound() {
   state.scoreLeft = 0;
   state.scoreRight = 0;
+  resetPlayerWins();
+  state.matchWinnerLabel = '';
   state.round = 1;
   if (isSingleEndlessMode()) {
     resetEndlessProgress();
@@ -2696,25 +2774,42 @@ function getRightTeamLabel() {
 
 function getRoundWinnerTeam(player) {
   if (!player) return null;
+  if (state.battleRoyale) return player.id;
   return player.id === 'p1' ? 'left' : 'right';
 }
 
 function endRound(winnerTeam, reason) {
   if (state.phase !== 'playing') return;
 
-  if (winnerTeam === 'left') {
-    state.scoreLeft += 1;
-    setStatus(reason || 'LEFTポイント!');
-  } else if (winnerTeam === 'right') {
-    state.scoreRight += 1;
-    setStatus(reason || 'RIGHTポイント!');
+  if (state.battleRoyale) {
+    if (winnerTeam && state.activePlayerIds.includes(winnerTeam)) {
+      state.playerWins[winnerTeam] = getPlayerWins(winnerTeam) + 1;
+      const winnerLabel = getDisplayPlayerLabel(winnerTeam);
+      setStatus(reason || `${winnerLabel} が1本先取!`);
+    } else {
+      setStatus(reason || '引き分け');
+    }
+    syncBattleRoyaleTeamScores();
   } else {
-    setStatus(reason || '引き分け');
+    if (winnerTeam === 'left') {
+      state.scoreLeft += 1;
+      setStatus(reason || 'LEFTポイント!');
+    } else if (winnerTeam === 'right') {
+      state.scoreRight += 1;
+      setStatus(reason || 'RIGHTポイント!');
+    } else {
+      setStatus(reason || '引き分け');
+    }
   }
 
   playSfx('ringout');
 
-  const hasWinner = state.scoreLeft >= CONFIG.pointsToWin || state.scoreRight >= CONFIG.pointsToWin;
+  let hasWinner = false;
+  if (state.battleRoyale) {
+    hasWinner = Boolean(getBattleRoyaleChampionId());
+  } else {
+    hasWinner = state.scoreLeft >= CONFIG.pointsToWin || state.scoreRight >= CONFIG.pointsToWin;
+  }
   if (!hasWinner) {
     state.phase = 'round_over';
     if (isSingleMode()) {
@@ -2730,15 +2825,26 @@ function endRound(winnerTeam, reason) {
     return;
   }
 
+  if (state.battleRoyale) {
+    const championId = getBattleRoyaleChampionId();
+    state.matchWinnerLabel = championId ? getDisplayPlayerLabel(championId) : '';
+  } else {
+    const champTeam = state.scoreLeft > state.scoreRight ? 'left' : 'right';
+    state.matchWinnerLabel = champTeam === 'left' ? (isSingleMode() ? 'YOU' : 'P1') : getRightTeamLabel();
+  }
+
   if (isSingleMode()) {
-    handleSingleMatchResult(state.scoreLeft > state.scoreRight);
+    if (state.battleRoyale) {
+      handleSingleMatchResult(state.matchWinnerLabel === 'YOU');
+    } else {
+      handleSingleMatchResult(state.scoreLeft > state.scoreRight);
+    }
     emitSnapshotNow();
     return;
   }
 
   state.phase = 'match_over';
-  const champTeam = state.scoreLeft > state.scoreRight ? 'left' : 'right';
-  setStatus(`${champTeam === 'left' ? 'P1' : getRightTeamLabel()} WIN! Rematchで再戦`);
+  setStatus(`${state.matchWinnerLabel || 'WINNER'} の勝利! Rematchで再戦`);
   playSfx('decide');
   playSfx('win');
   updateStartButtonLabel();
@@ -4079,6 +4185,8 @@ function createSnapshot() {
     status: state.status,
     scoreLeft: state.scoreLeft,
     scoreRight: state.scoreRight,
+    playerWins: { ...state.playerWins },
+    matchWinnerLabel: state.matchWinnerLabel,
     activePlayerIds: state.activePlayerIds.slice(),
     item: state.item ? { ...state.item } : null,
     itemWarning: state.itemWarning ? { ...state.itemWarning } : null,
@@ -4188,6 +4296,12 @@ function applySnapshot(snapshot) {
   state.status = snapshot.status || state.status;
   state.scoreLeft = Number(snapshot.scoreLeft) || 0;
   state.scoreRight = Number(snapshot.scoreRight) || 0;
+  state.playerWins = {
+    ...createEmptyPlayerWins(),
+    ...(snapshot.playerWins || {}),
+  };
+  state.matchWinnerLabel = String(snapshot.matchWinnerLabel || '');
+  ensurePlayerWinsForActivePlayers();
   state.item = snapshot.item ? { ...snapshot.item } : null;
   state.itemWarning = snapshot.itemWarning ? { ...snapshot.itemWarning } : null;
   state.bullets = Array.isArray(snapshot.bullets)
@@ -4744,11 +4858,15 @@ function drawEffects() {
   ctx.globalAlpha = 1;
 }
 
-function drawGameScorePips(startX, y, filledCount, color) {
+function drawGameScorePips(startX, y, filledCount, color, options = {}) {
+  const spacing = options.spacing ?? 16;
+  const radius = options.radius ?? 5;
+  const maxCount = options.maxCount ?? CONFIG.pointsToWin;
   for (let i = 0; i < CONFIG.pointsToWin; i += 1) {
-    const x = startX + i * 16;
+    if (i >= maxCount) break;
+    const x = startX + i * spacing;
     ctx.beginPath();
-    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
     if (i < filledCount) {
       ctx.fillStyle = color;
       ctx.fill();
@@ -4763,44 +4881,87 @@ function drawGameScorePips(startX, y, filledCount, color) {
 }
 
 function drawInGameScoreBoard() {
-  const panelW = 280;
-  const panelH = 66;
-  const panelX = center.x - panelW * 0.5;
-  const panelY = 14;
-  const rightLabel = isSingleMode() ? 'ENEMY' : getRightTeamLabel();
   const timeLeft = Math.ceil(state.timer);
   const endlessKills = state.single.endless.kills;
   const endlessAlive = Math.max(0, state.activePlayers.filter((player) => player.id !== 'p1').length);
 
+  if (state.battleRoyale && !isSingleEndlessMode()) {
+    const rows = getBattleRoyaleScoreRows();
+    const panelW = 372;
+    const panelH = 48 + rows.length * 18;
+    const panelX = center.x - panelW * 0.5;
+    const panelY = 12;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(3, 11, 14, 0.62)';
+    ctx.fillRect(panelX, panelY, panelW, panelH);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.24)';
+    ctx.lineWidth = 1.4;
+    ctx.strokeRect(panelX, panelY, panelW, panelH);
+
+    ctx.textBaseline = 'middle';
+    ctx.font = "bold 14px 'Chakra Petch', sans-serif";
+    ctx.fillStyle = '#defaf2';
+    ctx.textAlign = 'left';
+    ctx.fillText('BATTLE ROYALE', panelX + 12, panelY + 15);
+
+    ctx.textAlign = 'center';
+    ctx.font = "bold 12px 'Chakra Petch', sans-serif";
+    ctx.fillStyle = 'rgba(236, 247, 244, 0.86)';
+    ctx.fillText(`TIME ${timeLeft}`, panelX + panelW * 0.5, panelY + 15);
+
+    ctx.textAlign = 'right';
+    ctx.fillText(`先取 ${CONFIG.pointsToWin}`, panelX + panelW - 12, panelY + 15);
+
+    rows.forEach((row, index) => {
+      const y = panelY + 38 + index * 18;
+      ctx.textAlign = 'left';
+      ctx.font = "bold 13px 'Chakra Petch', sans-serif";
+      ctx.fillStyle = row.wins > 0 ? '#f8e6b2' : 'rgba(234, 247, 244, 0.92)';
+      ctx.fillText(row.label, panelX + 12, y);
+      const pipStartX = panelX + panelW - 14 - ((CONFIG.pointsToWin - 1) * 18);
+      drawGameScorePips(pipStartX, y, row.wins, row.color, { spacing: 18, radius: 5.5 });
+    });
+
+    ctx.restore();
+    return;
+  }
+
+  const panelW = 322;
+  const panelH = 80;
+  const panelX = center.x - panelW * 0.5;
+  const panelY = 14;
+  const rightLabel = isSingleMode() ? 'ENEMY' : getRightTeamLabel();
+
   ctx.save();
-  ctx.fillStyle = 'rgba(3, 11, 14, 0.58)';
+  ctx.fillStyle = 'rgba(3, 11, 14, 0.62)';
   ctx.fillRect(panelX, panelY, panelW, panelH);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.26)';
+  ctx.lineWidth = 1.4;
   ctx.strokeRect(panelX, panelY, panelW, panelH);
 
-  ctx.font = "bold 16px 'Chakra Petch', sans-serif";
+  ctx.font = "bold 18px 'Chakra Petch', sans-serif";
   ctx.fillStyle = '#eaf7f4';
   ctx.textBaseline = 'middle';
 
   ctx.textAlign = 'left';
-  ctx.fillText('P1', panelX + 14, panelY + 19);
+  ctx.fillText('P1', panelX + 16, panelY + 22);
   ctx.textAlign = 'right';
-  ctx.fillText(rightLabel, panelX + panelW - 14, panelY + 19);
+  ctx.fillText(rightLabel, panelX + panelW - 16, panelY + 22);
 
   ctx.textAlign = 'center';
-  ctx.font = "bold 11px 'Chakra Petch', sans-serif";
+  ctx.font = "bold 12px 'Chakra Petch', sans-serif";
   ctx.fillStyle = 'rgba(236, 247, 244, 0.8)';
-  ctx.fillText(isSingleEndlessMode() ? 'ENDLESS' : 'TIME', panelX + panelW * 0.5, panelY + 16);
-  ctx.font = "bold 24px 'Chakra Petch', sans-serif";
+  ctx.fillText(isSingleEndlessMode() ? 'ENDLESS' : 'TIME', panelX + panelW * 0.5, panelY + 19);
+  ctx.font = "bold 30px 'Chakra Petch', sans-serif";
   if (isSingleEndlessMode()) {
     ctx.fillStyle = '#ffe08e';
-    ctx.fillText(`K${endlessKills} / E${endlessAlive}`, panelX + panelW * 0.5, panelY + 43);
+    ctx.fillText(`K${endlessKills} / E${endlessAlive}`, panelX + panelW * 0.5, panelY + 48);
   } else {
     ctx.fillStyle = timeLeft <= 10 ? '#ff9f86' : '#ffe08e';
-    ctx.fillText(String(timeLeft), panelX + panelW * 0.5, panelY + 43);
-    drawGameScorePips(panelX + 14, panelY + 50, state.scoreLeft, 'rgba(61, 238, 212, 0.95)');
-    drawGameScorePips(panelX + panelW - 14 - ((CONFIG.pointsToWin - 1) * 16), panelY + 50, state.scoreRight, 'rgba(255, 182, 108, 0.96)');
+    ctx.fillText(String(timeLeft), panelX + panelW * 0.5, panelY + 49);
+    drawGameScorePips(panelX + 18, panelY + 60, state.scoreLeft, 'rgba(61, 238, 212, 0.95)', { spacing: 18, radius: 6 });
+    drawGameScorePips(panelX + panelW - 18 - ((CONFIG.pointsToWin - 1) * 18), panelY + 60, state.scoreRight, 'rgba(255, 182, 108, 0.96)', { spacing: 18, radius: 6 });
   }
 
   ctx.restore();
@@ -4863,27 +5024,37 @@ function drawOverlay() {
   }
 
   if (state.phase === 'match_over') {
+    if (state.matchWinnerLabel && !isSingleEndlessMode()) {
+      ctx.font = "bold 58px 'Noto Sans JP', sans-serif";
+      ctx.fillStyle = '#ffe6a6';
+      ctx.strokeStyle = 'rgba(12, 6, 2, 0.62)';
+      ctx.lineWidth = 6;
+      const winnerHeadline = `${state.matchWinnerLabel} の勝利！`;
+      ctx.strokeText(winnerHeadline, center.x, center.y - 62);
+      ctx.fillText(winnerHeadline, center.x, center.y - 62);
+    }
+
     if (isSingleStoryMode() && state.single.campaignComplete) {
-      ctx.fillText('CAMPAIGN CLEAR', center.x, center.y - 20);
+      ctx.fillText('CAMPAIGN CLEAR', center.x, center.y + 4);
       ctx.font = "22px 'Noto Sans JP', sans-serif";
-      ctx.fillText('Restart Campaignで1から再挑戦', center.x, center.y + 32);
+      ctx.fillText('Restart Campaignで1から再挑戦', center.x, center.y + 48);
     } else if (isSingleEndlessMode()) {
       ctx.fillText('ENDLESS OVER', center.x, center.y - 20);
       ctx.font = "22px 'Noto Sans JP', sans-serif";
       ctx.fillText(`撃破数 ${state.single.endless.kills} 体 | Tapで再挑戦`, center.x, center.y + 32);
     } else if (isSingleStoryMode()) {
-      ctx.fillText(`STAGE ${state.single.stageIndex + 1}`, center.x, center.y - 20);
+      ctx.fillText(`STAGE ${state.single.stageIndex + 1}`, center.x, center.y + 4);
       ctx.font = "22px 'Noto Sans JP', sans-serif";
-      ctx.fillText('Retry Stageで再挑戦', center.x, center.y + 32);
+      ctx.fillText('Retry Stageで再挑戦', center.x, center.y + 48);
     } else if (isSingleFreeMode()) {
-      ctx.fillText('FREE BATTLE', center.x, center.y - 20);
+      ctx.fillText('FREE BATTLE', center.x, center.y + 4);
       ctx.font = "22px 'Noto Sans JP', sans-serif";
-      ctx.fillText('画面タップで再戦', center.x, center.y + 32);
+      ctx.fillText('画面タップで再戦', center.x, center.y + 48);
     } else {
-      const champ = state.scoreLeft > state.scoreRight ? 'P1' : getRightTeamLabel();
-      ctx.fillText(`${champ} CHAMPION`, center.x, center.y - 20);
+      const champ = state.matchWinnerLabel || (state.scoreLeft > state.scoreRight ? 'P1' : getRightTeamLabel());
+      ctx.fillText(`${champ} CHAMPION`, center.x, center.y + 4);
       ctx.font = "22px 'Noto Sans JP', sans-serif";
-      ctx.fillText('Rematchで再戦', center.x, center.y + 32);
+      ctx.fillText('Rematchで再戦', center.x, center.y + 48);
     }
   }
 
@@ -5010,6 +5181,12 @@ function updateHud() {
     p2ScoreEl.textContent = `${aliveEnemies}`;
     renderSetMarks(p1SetMarksEl, 0);
     renderSetMarks(p2SetMarksEl, 0);
+  } else if (state.battleRoyale) {
+    syncBattleRoyaleTeamScores();
+    p1ScoreEl.textContent = `${getPlayerWins('p1')}`;
+    p2ScoreEl.textContent = `${state.scoreRight}`;
+    renderSetMarks(p1SetMarksEl, getPlayerWins('p1'));
+    renderSetMarks(p2SetMarksEl, state.scoreRight);
   } else {
     p1ScoreEl.textContent = `${state.scoreLeft}`;
     p2ScoreEl.textContent = `${state.scoreRight}`;
@@ -5027,10 +5204,8 @@ function updateHud() {
     if (isSingleEndlessMode()) {
       const aliveEnemies = Math.max(0, state.activePlayers.filter((player) => player.id !== 'p1').length);
       setScoreTextEl.textContent = `ENDLESS | KILLS ${state.single.endless.kills} | ALIVE ${aliveEnemies}`;
-    } else if (state.battleRoyale && isSingleMode()) {
-      setScoreTextEl.textContent = `先取${CONFIG.pointsToWin} | YOU ${state.scoreLeft} - ${state.scoreRight} FIELD`;
     } else if (state.battleRoyale) {
-      setScoreTextEl.textContent = `先取${CONFIG.pointsToWin} | P1 ${state.scoreLeft} - ${state.scoreRight} FIELD`;
+      setScoreTextEl.textContent = `先取${CONFIG.pointsToWin} | ${getBattleRoyaleScoreSummary()}`;
     } else if (isSingleMode()) {
       setScoreTextEl.textContent = `先取${CONFIG.pointsToWin} | YOU ${state.scoreLeft} - ${state.scoreRight} ENEMY`;
     } else if (isOnlineMode() && online.enabled && getOnlineEnemyCount() > 1) {
@@ -5935,7 +6110,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260322-1')
+    navigator.serviceWorker.register('sw.js?v=20260322-2')
       .then((registration) => registration.update())
       .catch(() => {});
   });

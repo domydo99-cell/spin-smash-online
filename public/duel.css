@@ -934,7 +934,7 @@ h1 {
 .score {
   margin-top: 3px;
   font-family: 'Chakra Petch', sans-serif;
-  font-size: clamp(1.3rem, 5vw, 2rem);
+  font-size: clamp(1.5rem, 5.8vw, 2.5rem);
 }
 
 .buffs {
@@ -951,8 +951,8 @@ h1 {
 }
 
 .set-mark {
-  width: 12px;
-  height: 12px;
+  width: 15px;
+  height: 15px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.45);
   background: rgba(0, 0, 0, 0.28);
@@ -969,7 +969,7 @@ h1 {
 }
 
 .center-card {
-  min-width: 160px;
+  min-width: 188px;
   text-align: center;
 }
 
@@ -982,19 +982,20 @@ h1 {
 
 .timer {
   font-family: 'Chakra Petch', sans-serif;
-  font-size: clamp(1.8rem, 6vw, 2.5rem);
+  font-size: clamp(2.3rem, 8vw, 3.5rem);
   line-height: 1.05;
 }
 
 .status {
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   opacity: 0.9;
 }
 
 .set-score {
   margin: 4px 0 0;
   font-family: 'Chakra Petch', sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.86rem;
+  line-height: 1.26;
   letter-spacing: 0.04em;
   color: rgba(236, 247, 244, 0.85);
 }

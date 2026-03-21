@@ -155,6 +155,17 @@ Original prompt: 説明とROUND1部分をゲーム画面の下へ移動し、FOC
   - `node --check public/duel.js` OK
   - `npm run build` OK
   - `develop-web-game` の Playwrightクライアント実行は `playwright` パッケージ未導入のため不可（ERR_MODULE_NOT_FOUND）。
+- 2026-03-22: HUD視認性・勝利演出・多人数勝利数表示を改善。
+  - タイマー/勝利表示の視認性向上（上部HUDのフォント・マーカー拡大、ゲーム内スコアボード大型化）。
+  - 勝敗決定時の演出を強化し、オーバーレイに `〜 の勝利！` 見出しを表示。
+  - バトルロイヤル時の勝利数をプレイヤー個別で管理する `playerWins` を導入。
+  - バトルロイヤル時は全参加者の勝利数一覧をゲーム画面上部に表示し、`setScoreText` にも全員分を反映。
+  - オンライン同期に `playerWins` / `matchWinnerLabel` を追加し、ゲスト側表示ズレを防止。
+  - キャッシュ更新: `duel.*` を `20260322-2`、SWを `spin-smash-shell-v22` に更新。
+- 2026-03-22: 検証。
+  - `node --check public/duel.js` OK
+  - `npm run build` OK
+  - `develop-web-game` の Playwrightクライアント実行は `playwright` パッケージ未導入のため不可（ERR_MODULE_NOT_FOUND）。
 - 2026-03-21: STAGE選択UI/プレビュー演出を再調整（視認性改善）。
   - STAGEカードの長文説明を削除し、カード内テキスト崩れを解消（詳細はプレビュー側に集約）。
   - プレビュー見出しに `サンプル` 行を追加して、ギミックの要点を短文で表示。
