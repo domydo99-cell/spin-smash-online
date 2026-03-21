@@ -84,6 +84,11 @@ Original prompt: 説明とROUND1部分をゲーム画面の下へ移動し、FOC
     - 敵撃破10体ごとにステージ自動切替
     - 雑魚敵は小型・低能力・低AI、かつ敵はアイテムを拾わない/使わない
   - HUDをENDLESS対応（`∞`表示、KILLS/ALIVE表示、オーバーレイ文言調整）。
+- 2026-03-21: BOMの直撃/爆風を分離調整。
+  - 直撃 (`isDirectHit`) は即死級の高ノックバックを維持。
+  - 爆風のみの被弾はノックバックを大幅に抑え、ミサイル同等〜少し強い程度に再調整。
+  - 直撃/爆風で `knockbackGraceTimer` と `knockbackSpeedLimit` も別設定に変更。
+  - キャッシュ更新: `duel.*` を `20260321-11`、SWを `spin-smash-shell-v17` に更新。
 - 2026-03-21: Start操作フローをタップ起動へ変更。
   - ゲーム画面右上の `Start` ボタンを削除（`Reset` のみ残す）。
   - キャンバス `pointerdown` で `idle -> startMatch`、SINGLE待機進行は `advanceSingleByTap()` を優先。

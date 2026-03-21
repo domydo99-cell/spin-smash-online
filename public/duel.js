@@ -3363,16 +3363,22 @@ function explodeBomb(bomb) {
     const nx = dx / pushDirLen || Math.cos(player.spinAngle);
     const ny = dy / pushDirLen || Math.sin(player.spinAngle);
     const falloff = 1 - clamp((dist - player.radius) / Math.max(1, bomb.blastRadius), 0, 1);
-    const powGuard = getBuffAmount(player, 'power');
-    const reduce = 1 - powGuard * 0.08;
     const isDirectHit = dist <= bomb.radius + player.radius * 0.95;
-    const hitScale = isDirectHit ? 5.2 : 2.6;
-    const knock = 1480 * (0.8 + falloff * 2.3) * reduce * hitScale;
+    const powGuard = getBuffAmount(player, 'power');
+    const reduce = 1 - powGuard * (isDirectHit ? 0.08 : 0.15);
+
+    let knock = 0;
+    if (isDirectHit) {
+      knock = 9800 * (0.92 + falloff * 0.35) * reduce;
+    } else {
+      // Splash should feel slightly stronger than missile, but far from instant death.
+      knock = 980 * (0.38 + falloff * 0.95) * reduce;
+    }
 
     player.vx += nx * knock;
     player.vy += ny * knock;
-    player.knockbackGraceTimer = Math.max(player.knockbackGraceTimer || 0, isDirectHit ? 0.44 : 0.32);
-    player.knockbackSpeedLimit = Math.max(player.knockbackSpeedLimit || 0, isDirectHit ? 6800 : 5200);
+    player.knockbackGraceTimer = Math.max(player.knockbackGraceTimer || 0, isDirectHit ? 0.46 : 0.24);
+    player.knockbackSpeedLimit = Math.max(player.knockbackSpeedLimit || 0, isDirectHit ? 7600 : 1950);
     hitCount += 1;
   });
 
@@ -5714,7 +5720,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-10')
+    navigator.serviceWorker.register('sw.js?v=20260321-11')
       .then((registration) => registration.update())
       .catch(() => {});
   });
