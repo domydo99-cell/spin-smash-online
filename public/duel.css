@@ -152,6 +152,31 @@ body {
   opacity: 0.92;
 }
 
+.assist-controls {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.assist-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(0, 0, 0, 0.26);
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+
+.assist-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #3be8bd;
+}
+
 .setup-panel {
   order: 3;
   padding: 10px;
@@ -1889,6 +1914,10 @@ body.flow-online-lobby .online-panel .mode-switch {
 body.flow-online-lobby .online-panel .mode-status,
 body.flow-online-lobby .online-panel .campaign-info {
   text-align: left;
+}
+
+body.flow-online-lobby .assist-controls {
+  justify-content: flex-start;
 }
 
 @keyframes topSpinLeft {

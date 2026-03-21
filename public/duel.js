@@ -37,6 +37,7 @@ const singleModeChoiceEl = document.getElementById('singleModeChoice');
 const singleStoryBtn = document.getElementById('singleStoryBtn');
 const singleFreeBtn = document.getElementById('singleFreeBtn');
 const singleEndlessBtn = document.getElementById('singleEndlessBtn');
+const steerAssistToggleEl = document.getElementById('steerAssistToggle');
 
 const onlineControlsEl = document.getElementById('onlineControls');
 const playerNameInputEl = document.getElementById('playerNameInput');
@@ -123,6 +124,7 @@ const ENDLESS_STAGE_KILL_STEP = 10;
 const ENDLESS_ELITE_SPAWN_STEP = 20;
 const ENDLESS_STAGE_ROTATION = ['classic', 'neon', 'glacier', 'magma', 'storm', 'gravity', 'collapse'];
 const ENDLESS_ENEMY_IDS = ['p2', 'p3', 'p4', 'npcA', 'npcB'];
+const STEER_ASSIST_STORAGE_KEY = 'spin_smash_steer_assist_v1';
 
 const ONLINE_PLAYER_ROLES = ['p1', 'p2', 'p3', 'p4'];
 const ONLINE_GUEST_ROLES = ['p2', 'p3', 'p4'];
@@ -521,6 +523,36 @@ function randomRange(min, max) {
   return min + Math.random() * (max - min);
 }
 
+function loadSteerAssistSetting() {
+  try {
+    const saved = localStorage.getItem(STEER_ASSIST_STORAGE_KEY);
+    if (saved === '0') return false;
+    if (saved === '1') return true;
+  } catch (_) {
+    // ignore storage errors and fall back to default
+  }
+  return true;
+}
+
+function saveSteerAssistSetting(enabled) {
+  try {
+    localStorage.setItem(STEER_ASSIST_STORAGE_KEY, enabled ? '1' : '0');
+  } catch (_) {
+    // ignore storage errors
+  }
+}
+
+function setSteerAssistEnabled(enabled, persist = true) {
+  controlOptions.steerAssist = Boolean(enabled);
+  if (steerAssistToggleEl) {
+    steerAssistToggleEl.checked = controlOptions.steerAssist;
+  }
+  if (persist) {
+    saveSteerAssistSetting(controlOptions.steerAssist);
+  }
+  updateControlUi();
+}
+
 function getArenaRadius() {
   return state.arenaRadiusCurrent || state.stage?.arenaRadius || 360;
 }
@@ -754,6 +786,10 @@ const uiState = {
   focusMode: false,
   activeItemSlot: null,
   setupPanelOpen: false,
+};
+
+const controlOptions = {
+  steerAssist: loadSteerAssistSetting(),
 };
 
 const FLOW_SCENES = {
@@ -2078,6 +2114,10 @@ function setControlHint(text) {
   controlHintEl.textContent = text;
 }
 
+function withAssistHint(text) {
+  return `${text} | ASSIST ${controlOptions.steerAssist ? 'ON' : 'OFF'}`;
+}
+
 function resetToTitleHome() {
   if (state.phase !== 'idle') {
     resetMatch(true);
@@ -2097,11 +2137,11 @@ function updateControlUi() {
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = 'p1';
     if (isSingleStoryMode()) {
-      setControlHint('STORY | スティックのみで移動。敵をリングアウト');
+      setControlHint(withAssistHint('STORY | スティックのみで移動。敵をリングアウト'));
     } else if (isSingleEndlessMode()) {
-      setControlHint('ENDLESS | 生き残り続けて撃破数を伸ばす');
+      setControlHint(withAssistHint('ENDLESS | 生き残り続けて撃破数を伸ばす'));
     } else {
-      setControlHint('FREE BATTLE | スティックのみで移動。全員バトルロイヤル');
+      setControlHint(withAssistHint('FREE BATTLE | スティックのみで移動。全員バトルロイヤル'));
     }
     if (startBtn) startBtn.disabled = false;
     resetBtn.disabled = false;
@@ -2117,7 +2157,7 @@ function updateControlUi() {
     touchColP1.classList.remove('is-active');
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = null;
-    setControlHint('LOCAL 2P | 操作はスティックのみ。倒した方向へ移動');
+    setControlHint(withAssistHint('LOCAL 2P | 操作はスティックのみ。倒した方向へ移動'));
     if (startBtn) startBtn.disabled = false;
     resetBtn.disabled = false;
     updateItemButtons();
@@ -2132,7 +2172,7 @@ function updateControlUi() {
     touchColP1.classList.add('is-active');
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = 'p1';
-    setControlHint('ONLINE | ルーム作成または参加してください');
+    setControlHint(withAssistHint('ONLINE | ルーム作成または参加してください'));
     if (startBtn) startBtn.disabled = true;
     resetBtn.disabled = false;
     updateItemButtons();
@@ -2147,7 +2187,7 @@ function updateControlUi() {
     touchColP1.classList.add('is-active');
     touchColP2.classList.remove('is-active');
     uiState.activeItemSlot = 'p1';
-    setControlHint(`ONLINE HOST | ROOM: ${online.roomCode} | ENEMY ${getOnlineEnemyCount()}体`);
+    setControlHint(withAssistHint(`ONLINE HOST | ROOM: ${online.roomCode} | ENEMY ${getOnlineEnemyCount()}体`));
     if (startBtn) startBtn.disabled = state.phase === 'match_over' ? true : !online.peerReady;
     resetBtn.disabled = false;
   } else {
@@ -2157,7 +2197,7 @@ function updateControlUi() {
     touchColP1.classList.remove('is-active');
     touchColP2.classList.add('is-active');
     uiState.activeItemSlot = getOnlineOwnRole();
-    setControlHint(`ONLINE ${getOnlineOwnRole().toUpperCase()} | ROOM: ${online.roomCode} | ホストの開始待ち`);
+    setControlHint(withAssistHint(`ONLINE ${getOnlineOwnRole().toUpperCase()} | ROOM: ${online.roomCode} | ホストの開始待ち`));
     if (startBtn) startBtn.disabled = true;
     resetBtn.disabled = true;
   }
@@ -2700,7 +2740,40 @@ function getInputVector(player, touchInput) {
     y /= len;
   }
 
-  return { x, y, len: Math.min(1, len) };
+  const input = { x, y, len: Math.min(1, len) };
+  return applySteerAssistInput(player, input);
+}
+
+function applySteerAssistInput(player, input) {
+  if (!controlOptions.steerAssist) return input;
+  if (!player || player.isBot) return input;
+  if (input.len <= 0.08) return input;
+
+  const target = getNearestOpponent(player);
+  if (!target) return input;
+
+  const dx = target.x - player.x;
+  const dy = target.y - player.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist <= 0.001) return input;
+
+  const tx = dx / dist;
+  const ty = dy / dist;
+  const align = input.x * tx + input.y * ty;
+  if (align <= -0.35) return input;
+
+  const gate = clamp((align + 0.35) / 1.35, 0, 1);
+  const strength = clamp((0.14 + (1 - input.len) * 0.1) * gate, 0, 0.24);
+  if (strength <= 0.001) return input;
+
+  let x = input.x * (1 - strength) + tx * strength;
+  let y = input.y * (1 - strength) + ty * strength;
+  const len = Math.hypot(x, y);
+  if (len <= 0.001) return input;
+
+  x /= len;
+  y /= len;
+  return { x, y, len: input.len };
 }
 
 function getOpponents(player) {
@@ -2821,7 +2894,8 @@ function applyMovement(player, input, dt, target) {
   const powBuff = getBuffAmount(player, 'power');
   const accel = CONFIG.baseAccel * player.speedMul * (1 + powBuff * 0.45) * state.stage.speedScale;
   const maxSpeed = CONFIG.baseMaxSpeed * player.speedMul * (1 + powBuff * 0.28) * state.stage.speedScale;
-  const speedGrip = clamp((player.speedMul - 0.95) * 0.02, 0, 0.012);
+  const speedGrip = clamp((player.speedMul - 0.95) * 0.02, 0, 0.014);
+  const humanGripBonus = player.isBot ? 0 : 0.0012;
 
   player.vx += input.x * accel * dt * input.len;
   player.vy += input.y * accel * dt * input.len;
@@ -2829,7 +2903,7 @@ function applyMovement(player, input, dt, target) {
   if (input.len > 0.22) {
     const velLen = Math.hypot(player.vx, player.vy);
     if (velLen > 120) {
-      const steerGrip = clamp((0.0016 + speedGrip) * input.len * dt * 60, 0, 0.022);
+      const steerGrip = clamp((0.0016 + speedGrip + humanGripBonus) * input.len * dt * 60, 0, 0.03);
       const desiredVX = input.x * velLen;
       const desiredVY = input.y * velLen;
       player.vx += (desiredVX - player.vx) * steerGrip;
@@ -2838,6 +2912,12 @@ function applyMovement(player, input, dt, target) {
   }
 
   let stageDrag = state.stage.drag;
+  if (!player.isBot) {
+    // Touch操作で曲がりやすく止まりやすくして、全体の滑り感を抑える。
+    const activeGrip = input.len > 0.2 ? 0.007 * input.len : 0;
+    const releaseGrip = input.len <= 0.2 ? 0.011 : 0;
+    stageDrag -= activeGrip + releaseGrip;
+  }
   if (state.stageId === 'glacier') {
     const zone = state.stageFx?.iceZone;
     if (zone) {
@@ -2847,6 +2927,7 @@ function applyMovement(player, input, dt, target) {
       }
     }
   }
+  stageDrag = clamp(stageDrag, 0.91, 0.995);
 
   const damp = Math.pow(stageDrag, dt * 60);
   player.vx *= damp;
@@ -5418,6 +5499,15 @@ function bindUi() {
   bindPad(padP1, knobP1, touchState.p1);
   bindPad(padP2, knobP2, touchState.p2);
 
+  if (steerAssistToggleEl) {
+    steerAssistToggleEl.checked = controlOptions.steerAssist;
+    steerAssistToggleEl.addEventListener('change', () => {
+      unlockAudio();
+      playSfx('menu');
+      setSteerAssistEnabled(steerAssistToggleEl.checked);
+    });
+  }
+
   modeLocalBtn.addEventListener('click', () => {
     unlockAudio();
     playSfx('menu');
@@ -5720,7 +5810,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-12')
+    navigator.serviceWorker.register('sw.js?v=20260321-13')
       .then((registration) => registration.update())
       .catch(() => {});
   });
