@@ -71,6 +71,7 @@ const setupNextBtn = document.getElementById('setupNextBtn');
 const startBtn = document.getElementById('startBtn');
 const resetBtn = document.getElementById('resetBtn');
 const titleBtn = document.getElementById('titleBtn');
+const guideBtn = document.getElementById('guideBtn');
 const setupToggleBtn = document.getElementById('setupToggleBtn');
 const focusBtn = document.getElementById('focusBtn');
 const controlHintEl = document.getElementById('controlHint');
@@ -92,6 +93,14 @@ const rematchActionsEl = document.getElementById('rematchActions');
 const rematchBtn = document.getElementById('rematchBtn');
 const leaveQuickBtn = document.getElementById('leaveQuickBtn');
 const rematchStatusEl = document.getElementById('rematchStatus');
+const guideModalEl = document.getElementById('guideModal');
+const guideCloseBtn = document.getElementById('guideCloseBtn');
+const guideSkipBtn = document.getElementById('guideSkipBtn');
+const guideStartBtn = document.getElementById('guideStartBtn');
+const guideTabTutorialBtn = document.getElementById('guideTabTutorial');
+const guideTabRulesBtn = document.getElementById('guideTabRules');
+const guidePanelTutorialEl = document.getElementById('guidePanelTutorial');
+const guidePanelRulesEl = document.getElementById('guidePanelRules');
 
 const CONFIG = {
   width: 900,
@@ -125,6 +134,10 @@ const ENDLESS_ELITE_SPAWN_STEP = 20;
 const ENDLESS_STAGE_ROTATION = ['classic', 'neon', 'glacier', 'magma', 'storm', 'gravity', 'collapse'];
 const ENDLESS_ENEMY_IDS = ['p2', 'p3', 'p4', 'npcA', 'npcB'];
 const STEER_ASSIST_STORAGE_KEY = 'spin_smash_steer_assist_v1';
+const GUIDE_TAB_IDS = {
+  tutorial: 'tutorial',
+  rules: 'rules',
+};
 
 const ONLINE_PLAYER_ROLES = ['p1', 'p2', 'p3', 'p4'];
 const ONLINE_GUEST_ROLES = ['p2', 'p3', 'p4'];
@@ -786,6 +799,8 @@ const uiState = {
   focusMode: false,
   activeItemSlot: null,
   setupPanelOpen: false,
+  guideOpen: false,
+  guideTab: GUIDE_TAB_IDS.tutorial,
 };
 
 const controlOptions = {
@@ -2116,6 +2131,41 @@ function setControlHint(text) {
 
 function withAssistHint(text) {
   return `${text} | ASSIST ${controlOptions.steerAssist ? 'ON' : 'OFF'}`;
+}
+
+function setGuideTab(tabId) {
+  const nextTab = tabId === GUIDE_TAB_IDS.rules ? GUIDE_TAB_IDS.rules : GUIDE_TAB_IDS.tutorial;
+  uiState.guideTab = nextTab;
+
+  const tutorialActive = nextTab === GUIDE_TAB_IDS.tutorial;
+  if (guideTabTutorialBtn) {
+    guideTabTutorialBtn.classList.toggle('is-active', tutorialActive);
+    guideTabTutorialBtn.setAttribute('aria-selected', tutorialActive ? 'true' : 'false');
+  }
+  if (guideTabRulesBtn) {
+    guideTabRulesBtn.classList.toggle('is-active', !tutorialActive);
+    guideTabRulesBtn.setAttribute('aria-selected', tutorialActive ? 'false' : 'true');
+  }
+  if (guidePanelTutorialEl) {
+    guidePanelTutorialEl.classList.toggle('is-active', tutorialActive);
+  }
+  if (guidePanelRulesEl) {
+    guidePanelRulesEl.classList.toggle('is-active', !tutorialActive);
+  }
+}
+
+function setGuideOpen(open, tabId = null) {
+  if (tabId) {
+    setGuideTab(tabId);
+  }
+  uiState.guideOpen = Boolean(open);
+  if (guideModalEl) {
+    guideModalEl.classList.toggle('is-hidden', !uiState.guideOpen);
+  }
+  document.body.classList.toggle('guide-open', uiState.guideOpen);
+  if (uiState.guideOpen) {
+    keepViewportTop();
+  }
 }
 
 function resetToTitleHome() {
@@ -5508,6 +5558,57 @@ function bindUi() {
     });
   }
 
+  setGuideTab(uiState.guideTab);
+
+  if (guideTabTutorialBtn) {
+    guideTabTutorialBtn.addEventListener('click', () => {
+      unlockAudio();
+      playSfx('menu');
+      setGuideTab(GUIDE_TAB_IDS.tutorial);
+    });
+  }
+
+  if (guideTabRulesBtn) {
+    guideTabRulesBtn.addEventListener('click', () => {
+      unlockAudio();
+      playSfx('menu');
+      setGuideTab(GUIDE_TAB_IDS.rules);
+    });
+  }
+
+  bindPressAction(guideBtn, () => {
+    unlockAudio();
+    playSfx('menu');
+    setGuideOpen(true, GUIDE_TAB_IDS.tutorial);
+  });
+
+  bindPressAction(guideCloseBtn, () => {
+    unlockAudio();
+    playSfx('menu');
+    setGuideOpen(false);
+  });
+
+  bindPressAction(guideSkipBtn, () => {
+    unlockAudio();
+    playSfx('menu');
+    setGuideOpen(false);
+  });
+
+  bindPressAction(guideStartBtn, () => {
+    unlockAudio();
+    playSfx('menu');
+    setGuideOpen(false);
+  });
+
+  if (guideModalEl) {
+    guideModalEl.addEventListener('pointerdown', (event) => {
+      if (event.target !== guideModalEl) return;
+      unlockAudio();
+      playSfx('menu');
+      setGuideOpen(false);
+    });
+  }
+
   modeLocalBtn.addEventListener('click', () => {
     unlockAudio();
     playSfx('menu');
@@ -5741,6 +5842,7 @@ function bindUi() {
 
   canvas.addEventListener('pointerdown', (event) => {
     unlockAudio();
+    if (uiState.guideOpen) return;
 
     if (flowState.scene !== FLOW_SCENES.game) return;
 
@@ -5763,6 +5865,14 @@ function bindUi() {
 
   window.addEventListener('keydown', (event) => {
     unlockAudio();
+
+    if (uiState.guideOpen) {
+      if (event.code === 'Escape' || event.code === 'Space' || event.code === 'Enter') {
+        event.preventDefault();
+        setGuideOpen(false);
+      }
+      return;
+    }
 
     if (
       event.code.startsWith('Arrow') ||
@@ -5810,7 +5920,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-13')
+    navigator.serviceWorker.register('sw.js?v=20260321-14')
       .then((registration) => registration.update())
       .catch(() => {});
   });
@@ -5847,6 +5957,7 @@ bindUi();
 setupSocketHandlers();
 switchMode(PLAY_MODES.single, true);
 resetToTitleHome();
+setGuideOpen(true, GUIDE_TAB_IDS.tutorial);
 window.addEventListener('pageshow', (event) => {
   if (!event.persisted) return;
   resetToTitleHome();

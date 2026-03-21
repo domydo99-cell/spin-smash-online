@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SPIN SMASH | Online Duel</title>
-  <link rel="preload" href="duel.css?v=20260321-13" as="style" />
-  <link rel="preload" href="duel.js?v=20260321-13" as="script" />
+  <link rel="preload" href="duel.css?v=20260321-14" as="style" />
+  <link rel="preload" href="duel.js?v=20260321-14" as="script" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="duel.css?v=20260321-13" />
+  <link rel="stylesheet" href="duel.css?v=20260321-14" />
 </head>
 <body class="flow-title">
   <main class="layout">
@@ -128,6 +128,7 @@
           <div id="netBadge" class="net-badge is-hidden" aria-live="polite">NET --</div>
           <div class="arena-corner-actions">
             <button id="titleBtn" class="action-btn action-btn--ghost" type="button">Title</button>
+            <button id="guideBtn" class="action-btn action-btn--ghost" type="button">説明</button>
             <button id="resetBtn" class="action-btn action-btn--ghost" type="button">Reset</button>
           </div>
 
@@ -232,7 +233,71 @@
     </section>
   </main>
 
+  <section id="guideModal" class="guide-modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="guideModalTitle">
+    <article class="guide-modal__panel">
+      <header class="guide-modal__header">
+        <div>
+          <p class="guide-modal__eyebrow">WELCOME TO SPIN SMASH</p>
+          <h2 id="guideModalTitle" class="guide-modal__title">チュートリアル / ルール説明</h2>
+        </div>
+        <button id="guideCloseBtn" class="action-btn action-btn--ghost guide-modal__close" type="button">閉じる</button>
+      </header>
+
+      <div class="guide-tabs" role="tablist" aria-label="説明タブ">
+        <button id="guideTabTutorial" class="guide-tab is-active" type="button">チュートリアル</button>
+        <button id="guideTabRules" class="guide-tab" type="button">ルール説明</button>
+      </div>
+
+      <div id="guidePanelTutorial" class="guide-panel is-active" aria-live="polite">
+        <div class="guide-card-grid">
+          <article class="guide-card">
+            <p class="guide-card__title">1. 移動</p>
+            <p class="guide-card__text">画面下のスティックで移動します。右上の「説明」からいつでも再確認できます。</p>
+          </article>
+          <article class="guide-card">
+            <p class="guide-card__title">2. ぶつかって押し出す</p>
+            <p class="guide-card__text">相手に体当たりしてリング外に出すのが基本。勢いよく当たるほど強く吹っ飛びます。</p>
+          </article>
+          <article class="guide-card">
+            <p class="guide-card__title">3. アイテム活用</p>
+            <p class="guide-card__text">拾ったアイテムで能力強化や攻撃ができます。MIS/BOMは左下のアイコンボタンで任意発動。</p>
+          </article>
+          <article class="guide-card">
+            <p class="guide-card__title">4. 操作が難しい時</p>
+            <p class="guide-card__text">タイトル画面の「ハンドルアシスト」をONにすると、相手方向への移動補助が入ります。</p>
+          </article>
+        </div>
+      </div>
+
+      <div id="guidePanelRules" class="guide-panel" aria-live="polite">
+        <div class="guide-card-grid">
+          <article class="guide-card">
+            <p class="guide-card__title">勝利条件</p>
+            <p class="guide-card__text">先に2本先取でマッチ勝利。1ラウンドは45秒、リングアウトで1本獲得。</p>
+          </article>
+          <article class="guide-card">
+            <p class="guide-card__title">時間切れ判定</p>
+            <p class="guide-card__text">時間切れ時は中心により近い側が有利。差が小さいと引き分けになります。</p>
+          </article>
+          <article class="guide-card">
+            <p class="guide-card__title">SINGLE</p>
+            <p class="guide-card__text">STORY / FREE BATTLE / ENDLESS を選択可能。FREEは敵数やステージを自由設定。</p>
+          </article>
+          <article class="guide-card">
+            <p class="guide-card__title">ONLINE / LOCAL</p>
+            <p class="guide-card__text">ONLINEはルーム作成または参加コードで合流。LOCALは1端末で2人対戦が可能です。</p>
+          </article>
+        </div>
+      </div>
+
+      <div class="guide-modal__actions">
+        <button id="guideSkipBtn" class="action-btn action-btn--ghost" type="button">スキップ</button>
+        <button id="guideStartBtn" class="action-btn" type="button">OK</button>
+      </div>
+    </article>
+  </section>
+
   <script src="/socket.io/socket.io.js"></script>
-  <script src="duel.js?v=20260321-13"></script>
+  <script src="duel.js?v=20260321-14"></script>
 </body>
 </html>
