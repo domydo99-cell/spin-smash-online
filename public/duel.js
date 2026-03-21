@@ -3371,8 +3371,8 @@ function explodeBomb(bomb) {
     if (isDirectHit) {
       knock = 9800 * (0.92 + falloff * 0.35) * reduce;
     } else {
-      // Splash should feel slightly stronger than missile, but far from instant death.
-      knock = 980 * (0.38 + falloff * 0.95) * reduce;
+      // Splash should be around missile-tier (or a bit stronger), not instant death.
+      knock = 980 * (0.82 + falloff * 0.52) * reduce;
     }
 
     player.vx += nx * knock;
@@ -5720,7 +5720,7 @@ function registerServiceWorker() {
   if (!window.isSecureContext && !isLocalhost) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260321-11')
+    navigator.serviceWorker.register('sw.js?v=20260321-12')
       .then((registration) => registration.update())
       .catch(() => {});
   });

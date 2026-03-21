@@ -128,6 +128,10 @@ Original prompt: 説明とROUND1部分をゲーム画面の下へ移動し、FOC
   - `node --check public/duel.js` OK
   - `npm run build` OK
   - Playwrightクライアントは `playwright` 未導入のため実行不可（ERR_MODULE_NOT_FOUND）。
+- 2026-03-21: BOMノックバックを「直撃」と「爆風」で再調整。
+  - `explodeBomb` で `isDirectHit` 分岐を維持し、直撃は即リングアウト級の強ノックバックを維持。
+  - 爆風側はノックバック下限を引き上げ、`MIS` 同程度〜やや上になるレンジへ調整。
+  - キャッシュ更新: `duel.*` を `20260321-12`、SWを `spin-smash-shell-v18` に更新。
 - 2026-03-21: STAGE選択UI/プレビュー演出を再調整（視認性改善）。
   - STAGEカードの長文説明を削除し、カード内テキスト崩れを解消（詳細はプレビュー側に集約）。
   - プレビュー見出しに `サンプル` 行を追加して、ギミックの要点を短文で表示。
