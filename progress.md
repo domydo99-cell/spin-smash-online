@@ -155,6 +155,14 @@ Original prompt: 説明とROUND1部分をゲーム画面の下へ移動し、FOC
   - `node --check public/duel.js` OK
   - `npm run build` OK
   - `develop-web-game` の Playwrightクライアント実行は `playwright` パッケージ未導入のため不可（ERR_MODULE_NOT_FOUND）。
+- 2026-03-22: Renderのルート導線を修正。
+  - 原因: Renderの `/` が旧 `public/index.html`（WILD DERBY）を返しており、SPIN SMASHのタイトル画面/固定レイアウトに到達していなかった。
+  - 対応: `express.static` を `index:false` に変更し、`/` を `/duel.html` へ 302 リダイレクト。
+- 2026-03-22: 検証。
+  - `node --check server.js` OK
+  - `node --check public/duel.js` OK
+  - `npm run build` OK
+  - `develop-web-game` の Playwrightクライアント実行は `playwright` パッケージ未導入のため不可（ERR_MODULE_NOT_FOUND）。
 - 2026-03-22: HUD視認性・勝利演出・多人数勝利数表示を改善。
   - タイマー/勝利表示の視認性向上（上部HUDのフォント・マーカー拡大、ゲーム内スコアボード大型化）。
   - 勝敗決定時の演出を強化し、オーバーレイに `〜 の勝利！` 見出しを表示。

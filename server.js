@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 const GOAL_POS = 51;
 
 app.use(express.static('public', {
+  index: false,
   etag: true,
   lastModified: true,
   maxAge: '7d',
@@ -27,6 +28,11 @@ app.use(express.static('public', {
     }
   },
 }));
+
+app.get('/', (_req, res) => {
+  res.redirect(302, '/duel.html');
+});
+
 app.get('/healthz', (_req, res) => {
   res.status(200).json({
     ok: true,
